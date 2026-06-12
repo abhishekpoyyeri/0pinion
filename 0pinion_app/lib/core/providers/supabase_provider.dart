@@ -96,7 +96,7 @@ final userZeroesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) asyn
   final zeroesRes = await supabase
       .from('zeroes')
       .select()
-      .in_('id', zeroIds);
+      .inFilter('id', zeroIds);
       
   return List<Map<String, dynamic>>.from(zeroesRes);
 });
