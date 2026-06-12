@@ -85,11 +85,14 @@ class LiveRoomsScreen extends StatelessWidget {
                           children: [
                             Icon(Icons.person_outline, size: 16, color: secondaryText),
                             const SizedBox(width: 4),
-                            Text(
-                              'Hosted by @${room.hostUsername}',
-                              style: AppTypography.caption(color: secondaryText),
+                            Expanded(
+                              child: Text(
+                                'Hosted by @${room.hostUsername}',
+                                style: AppTypography.caption(color: secondaryText),
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                            const Spacer(),
+                            const SizedBox(width: 16),
                             Icon(Icons.group_outlined, size: 16, color: secondaryText),
                             const SizedBox(width: 4),
                             Text(

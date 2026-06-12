@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
 import '../../../data/mock/mock_data.dart';
+import '../../../data/models/live_room.dart';
 
 /// Live Room Chat screen — text-only real-time discussion
 class LiveRoomChatScreen extends StatefulWidget {
@@ -35,7 +36,14 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
 
     final room = MockData.liveRooms.firstWhere(
       (r) => r.id == widget.roomId,
-      orElse: () => MockData.liveRooms.first,
+      orElse: () => LiveRoom(
+        id: 'fallback',
+        title: 'Unknown Room',
+        hostId: '',
+        hostUsername: '',
+        participantsCount: 0,
+        createdAt: DateTime.now(),
+      ),
     );
     final messages = MockData.sampleMessages
         .where((m) => m.roomId == room.id)
@@ -50,7 +58,12 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(room.title, style: AppTypography.bodyMedium(color: primaryText)),
+            Text(
+              room.title,
+              style: AppTypography.bodyMedium(color: primaryText),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             Row(
               children: [
                 Container(
@@ -98,10 +111,13 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  '@${msg.senderUsername}',
-                                  style: AppTypography.captionMedium(
-                                    color: isMe ? primaryText : secondaryText,
+                                Flexible(
+                                  child: Text(
+                                    '@${msg.senderUsername}',
+                                    style: AppTypography.captionMedium(
+                                      color: isMe ? primaryText : secondaryText,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                                 const SizedBox(width: 8),

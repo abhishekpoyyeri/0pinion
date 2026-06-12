@@ -5,6 +5,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/mock/mock_data.dart';
+import '../../../data/models/opinion.dart';
 import '../../../data/models/argument.dart';
 
 /// Opinion Detail screen — full opinion + debate zone
@@ -42,7 +43,18 @@ class _OpinionDetailScreenState extends State<OpinionDetailScreen>
 
     final opinion = MockData.opinions.firstWhere(
       (o) => o.id == widget.opinionId,
-      orElse: () => MockData.opinions.first,
+      orElse: () => Opinion(
+        id: 'fallback',
+        title: 'No opinion selected',
+        content: '',
+        authorId: '',
+        authorUsername: '',
+        zeroes: [],
+        supportCount: 0,
+        opposeCount: 0,
+        questionCount: 0,
+        createdAt: DateTime.now(),
+      ),
     );
 
     final arguments = MockData.sampleArguments
@@ -100,18 +112,21 @@ class _OpinionDetailScreenState extends State<OpinionDetailScreen>
                       if (!opinion.isAnonymous)
                         AvatarWidget(seed: opinion.authorId.hashCode, size: 32),
                       if (!opinion.isAnonymous) const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            opinion.isAnonymous ? 'Anonymous' : '@${opinion.authorUsername}',
-                            style: AppTypography.bodyMedium(color: primaryText),
-                          ),
-                          Text(
-                            _formatTime(opinion.createdAt),
-                            style: AppTypography.caption(color: secondaryText),
-                          ),
-                        ],
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              opinion.isAnonymous ? 'Anonymous' : '@${opinion.authorUsername}',
+                              style: AppTypography.bodyMedium(color: primaryText),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              _formatTime(opinion.createdAt),
+                              style: AppTypography.caption(color: secondaryText),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -244,11 +259,14 @@ class _ArgumentTile extends StatelessWidget {
               if (!argument.isAnonymous)
                 AvatarWidget(seed: argument.authorId.hashCode, size: 24),
               if (!argument.isAnonymous) const SizedBox(width: 8),
-              Text(
-                argument.isAnonymous ? 'Anonymous' : '@${argument.authorUsername}',
-                style: AppTypography.captionMedium(color: primaryText),
+              Expanded(
+                child: Text(
+                  argument.isAnonymous ? 'Anonymous' : '@${argument.authorUsername}',
+                  style: AppTypography.captionMedium(color: primaryText),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 16),
               Text(
                 _timeAgo(argument.createdAt),
                 style: AppTypography.caption(color: secondaryText),
