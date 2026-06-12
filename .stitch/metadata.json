@@ -1,0 +1,86 @@
+{
+  "name": "projects/12994651394271601218",
+  "projectId": "12994651394271601218",
+  "title": "0pinion",
+  "visibility": "PRIVATE",
+  "createTime": "2026-06-12T08:54:39.658029Z",
+  "updateTime": "2026-06-12T09:19:31.142220Z",
+  "projectType": "PROJECT_DESIGN",
+  "origin": "STITCH",
+  "deviceType": "MOBILE",
+  "designSystem": {
+    "name": "assets/13244779772264007188",
+    "displayName": "0pinion Monochrome",
+    "colorMode": "LIGHT",
+    "colorVariant": "MONOCHROME",
+    "headlineFont": "SPACE_GROTESK",
+    "bodyFont": "GEIST",
+    "labelFont": "GEIST",
+    "roundness": "ROUND_TWELVE",
+    "customColor": "#000000",
+    "overridePrimaryColor": "#000000",
+    "overrideSecondaryColor": "#666666",
+    "overrideNeutralColor": "#E5E5E5"
+  },
+  "screens": {
+    "splash": {
+      "id": "86c923624a21413ea6c5681cb96c10ea",
+      "sourceScreen": "projects/12994651394271601218/screens/86c923624a21413ea6c5681cb96c10ea",
+      "title": "0pinion Landing Screen",
+      "width": 780,
+      "height": 1768
+    },
+    "signup": {
+      "id": "ea32217f0fe0468caf5c6a2073d5683d",
+      "sourceScreen": "projects/12994651394271601218/screens/ea32217f0fe0468caf5c6a2073d5683d",
+      "title": "Sign Up - 0pinion",
+      "width": 780,
+      "height": 1994
+    },
+    "username-setup": {
+      "id": "9d6d1f73e30d4419812043713fa58bf5",
+      "sourceScreen": "projects/12994651394271601218/screens/9d6d1f73e30d4419812043713fa58bf5",
+      "title": "Username Setup - 0pinion",
+      "width": 780,
+      "height": 1768
+    },
+    "select-zeroes": {
+      "id": "77b52816415843408158908324a1abd7",
+      "sourceScreen": "projects/12994651394271601218/screens/77b52816415843408158908324a1abd7",
+      "title": "Select Zeroes - 0pinion",
+      "width": 780,
+      "height": 1768
+    },
+    "welcome": {
+      "id": "33f4c566a5c24749ba1188b08315b159",
+      "sourceScreen": "projects/12994651394271601218/screens/33f4c566a5c24749ba1188b08315b159",
+      "title": "Welcome to 0pinion",
+      "width": 780,
+      "height": 1768
+    },
+    "home-feed": {
+      "id": "208ed311707045248d4b4344510df3fd",
+      "sourceScreen": "projects/12994651394271601218/screens/208ed311707045248d4b4344510df3fd",
+      "title": "Home Feed - 0pinion",
+      "width": 780,
+      "height": 2134
+    },
+    "search": {
+      "id": "14333c7a75614018abb0243d247fd003",
+      "sourceScreen": "projects/12994651394271601218/screens/14333c7a75614018abb0243d247fd003",
+      "title": "Search - 0pinion",
+      "width": 780,
+      "height": 2026
+    },
+    "create-opinion": {
+      "id": "f1544b732549478293d5e171eff9d0b1",
+      "sourceScreen": "projects/12994651394271601218/screens/f1544b732549478293d5e171eff9d0b1",
+      "title": "Create Opinion - 0pinion",
+      "width": 780,
+      "height": 1872
+    }
+  },
+  "metadata": {
+    "userRole": "OWNER"
+  }
+}
