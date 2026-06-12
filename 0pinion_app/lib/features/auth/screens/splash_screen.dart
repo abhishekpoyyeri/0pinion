@@ -84,7 +84,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   // Wordmark
                   Image.asset(
                     'assets/title.png',
-                    height: 80,
+                    height: 160,
                     fit: BoxFit.contain,
                     color: primaryText,
                   ),
