@@ -23,6 +23,31 @@ class Argument {
     this.replies = const [],
   });
 
+  factory Argument.fromJson(Map<String, dynamic> json) {
+    final profile = json['profiles'];
+    final username = profile != null ? profile['username'] as String : 'Unknown';
+
+    ArgumentType parseType(String type) {
+      switch (type) {
+        case 'support': return ArgumentType.support;
+        case 'oppose': return ArgumentType.oppose;
+        case 'question': return ArgumentType.question;
+        default: return ArgumentType.question;
+      }
+    }
+
+    return Argument(
+      id: json['id'] as String,
+      opinionId: json['opinion_id'] as String,
+      authorId: json['author_id'] as String,
+      authorUsername: username,
+      type: parseType(json['type'] as String),
+      content: json['content'] as String,
+      isAnonymous: json['is_anonymous'] as bool? ?? false,
+      createdAt: DateTime.parse(json['created_at'] as String),
+    );
+  }
+
   Argument copyWith({
     String? id,
     String? opinionId,

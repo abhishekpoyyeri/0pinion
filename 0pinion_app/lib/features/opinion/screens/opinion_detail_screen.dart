@@ -7,6 +7,7 @@ import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/models/argument.dart';
 import '../../../core/providers/opinion_provider.dart';
+import '../../../core/providers/argument_provider.dart';
 
 /// Opinion Detail screen — full opinion + debate zone
 class OpinionDetailScreen extends ConsumerStatefulWidget {
@@ -60,15 +61,29 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('Error: $e')),
         data: (opinions) {
+          if (opinions.isEmpty) {
+            return const Center(child: Text('Opinion not found'));
+          }
+
           final opinion = opinions.firstWhere(
             (o) => o.id == widget.opinionId,
-            // Fallback for demonstration if ID isn't found
             orElse: () => opinions.first,
           );
 
-          // We'll stub arguments until we implement argument repository
-          final arguments = <Argument>[];
-      body: Column(
+          final argumentsAsync = ref.watch(opinionArgumentsProvider(widget.opinionId));
+          
+          if (argumentsAsync.hasError) {
+            return Center(child: Text('Failed to load arguments:\n${argumentsAsync.error}', textAlign: TextAlign.center));
+          }
+
+          final arguments = argumentsAsync.value ?? <Argument>[];
+
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(opinionArgumentsProvider(widget.opinionId));
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: Column(
         children: [
           // Opinion content
           Expanded(
@@ -156,9 +171,9 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
                   TabBar(
                     controller: _tabController,
                     tabs: [
-                      Tab(text: 'Support (${opinion.supportCount})'),
-                      Tab(text: 'Oppose (${opinion.opposeCount})'),
-                      Tab(text: 'Question (${opinion.questionCount})'),
+                      Tab(text: 'Support (${arguments.where((a) => a.type == ArgumentType.support).length})'),
+                      Tab(text: 'Oppose (${arguments.where((a) => a.type == ArgumentType.oppose).length})'),
+                      Tab(text: 'Question (${arguments.where((a) => a.type == ArgumentType.question).length})'),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -210,9 +225,10 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
             ),
           ),
         ],
-      );
-    },
-  ),
+      ), // close Column
+    ); // close RefreshIndicator
+  },
+),
 );
   }
 

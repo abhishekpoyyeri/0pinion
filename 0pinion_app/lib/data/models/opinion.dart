@@ -40,10 +40,9 @@ class Opinion {
       zeroes: json['zeroes'] != null ? [json['zeroes']['name'] as String] : [],
       isCooking: json['is_cooking'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
-      // We'll calculate counts if they come from a joined query, or default to 0
-      supportCount: 0,
-      opposeCount: 0,
-      questionCount: 0,
+      supportCount: (json['arguments'] as List?)?.where((a) => a['type'] == 'support').length ?? 0,
+      opposeCount: (json['arguments'] as List?)?.where((a) => a['type'] == 'oppose').length ?? 0,
+      questionCount: (json['arguments'] as List?)?.where((a) => a['type'] == 'question').length ?? 0,
     );
   }
 

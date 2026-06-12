@@ -33,11 +33,14 @@ class LiveRoomsScreen extends StatelessWidget {
           ),
           Divider(height: 1, color: borderColor),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: 0,
-              separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
+            child: RefreshIndicator(
+              onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
+              child: ListView.separated(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(16),
+                itemCount: 0,
+                separatorBuilder: (_, _) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
                 final room = null;
                 return GestureDetector(
                   onTap: () => context.push('/live/${room.id}'),
@@ -103,6 +106,7 @@ class LiveRoomsScreen extends StatelessWidget {
                   ),
                 );
               },
+            ),
             ),
           ),
         ],
