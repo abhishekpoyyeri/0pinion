@@ -12,13 +12,29 @@ class VideoLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool isLightMode = Theme.of(context).brightness == Brightness.light;
+
+    Widget image = Image.asset(
+      'assets/loading.gif',
+      fit: BoxFit.contain,
+    );
+
+    if (isLightMode) {
+      image = ColorFiltered(
+        colorFilter: const ColorFilter.matrix(<double>[
+          -1,  0,  0, 0, 255,
+           0, -1,  0, 0, 255,
+           0,  0, -1, 0, 255,
+           0,  0,  0, 1,   0,
+        ]),
+        child: image,
+      );
+    }
+
     return SizedBox(
       width: width,
       height: height,
-      child: Image.asset(
-        'assets/loading.gif',
-        fit: BoxFit.contain,
-      ),
+      child: image,
     );
   }
 }
