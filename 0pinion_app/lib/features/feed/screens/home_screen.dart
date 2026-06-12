@@ -42,7 +42,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       appBar: AppBar(
         title: Image.asset(
           'assets/title.png',
-          height: 36,
+          height: 48,
           fit: BoxFit.contain,
           color: primaryText,
         ),
