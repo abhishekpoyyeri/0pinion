@@ -1,9 +1,10 @@
+import 'package:opinion_app/core/widgets/video_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/primary_button.dart';
-
+import '../../../core/utils/error_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/repositories/auth_repository.dart';
 
@@ -63,9 +64,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        AppErrorHandler.showErrorDialog(context, e);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -187,7 +186,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
               // Sign Up button
               _isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: VideoLoader())
                   : PrimaryButton(
                       label: _isLogin ? 'Log In' : 'Sign Up',
                       onPressed: _submit,

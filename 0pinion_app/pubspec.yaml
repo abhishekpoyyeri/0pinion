@@ -30,6 +30,7 @@ dependencies:
   uuid: ^4.5.1
   intl: ^0.19.0
   cached_network_image: ^3.4.1
+  custom_refresh_indicator: ^4.0.1
 
 dev_dependencies:
   flutter_test:

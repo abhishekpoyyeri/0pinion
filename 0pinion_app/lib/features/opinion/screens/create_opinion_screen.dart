@@ -1,3 +1,4 @@
+import 'package:opinion_app/core/widgets/video_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -55,9 +56,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
 
     final user = ref.read(currentUserProvider);
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: Not authenticated.')),
-      );
+      AppErrorHandler.showErrorDialog(context, 'Error: Not authenticated.');
       return;
     }
 
@@ -91,9 +90,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        AppErrorHandler.showErrorDialog(context, e);
       }
     } finally {
       if (mounted) setState(() => _isOpinionLoading = false);
