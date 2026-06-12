@@ -42,11 +42,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       appBar: AppBar(
         title: Image.asset(
           'assets/title.png',
-          height: 28,
+          height: 36,
           fit: BoxFit.contain,
           color: primaryText,
         ),
-        centerTitle: false,
+        centerTitle: true,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Column(
