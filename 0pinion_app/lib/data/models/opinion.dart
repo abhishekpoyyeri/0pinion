@@ -29,6 +29,24 @@ class Opinion {
 
   int get totalDebates => supportCount + opposeCount + questionCount;
 
+  factory Opinion.fromJson(Map<String, dynamic> json) {
+    return Opinion(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      content: json['content'] as String,
+      authorId: json['author_id'] as String? ?? 'anonymous',
+      authorUsername: json['profiles']?['username'] as String? ?? 'Anonymous',
+      isAnonymous: json['is_anonymous'] as bool? ?? false,
+      zeroes: json['zeroes'] != null ? [json['zeroes']['name'] as String] : [],
+      isCooking: json['is_cooking'] as bool? ?? false,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      // We'll calculate counts if they come from a joined query, or default to 0
+      supportCount: 0,
+      opposeCount: 0,
+      questionCount: 0,
+    );
+  }
+
   Opinion copyWith({
     String? id,
     String? title,

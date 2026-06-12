@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_data.dart';
+
 
 /// Browse Zeroes screen — full directory of topic communities
 class BrowseZeroesScreen extends StatelessWidget {
@@ -26,10 +26,10 @@ class BrowseZeroesScreen extends StatelessWidget {
       ),
       body: ListView.separated(
         padding: const EdgeInsets.all(16),
-        itemCount: MockData.zeroes.length,
+        itemCount: 0,
         separatorBuilder: (_, _) => const SizedBox(height: 10),
         itemBuilder: (context, index) {
-          final zero = MockData.zeroes[index];
+          final zero = null;
           return Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(

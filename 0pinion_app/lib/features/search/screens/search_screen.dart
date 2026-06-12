@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/opinion_card.dart';
-import '../../../data/mock/mock_data.dart';
+import '../../../data/models/opinion.dart';
 
 /// Search screen — search bar + Opinions/Zeroes/Users tabs
 class SearchScreen extends StatefulWidget {
@@ -100,13 +100,7 @@ class _SearchScreenState extends State<SearchScreen>
   }
 
   Widget _buildOpinionsTab(Color primaryText, Color secondaryText) {
-    final filtered = _query.isEmpty
-        ? MockData.opinions
-        : MockData.opinions
-            .where((o) =>
-                o.title.toLowerCase().contains(_query.toLowerCase()) ||
-                o.content.toLowerCase().contains(_query.toLowerCase()))
-            .toList();
+    final List<Opinion> filtered = [];
 
     return ListView.separated(
       padding: const EdgeInsets.all(16),
@@ -122,11 +116,7 @@ class _SearchScreenState extends State<SearchScreen>
   }
 
   Widget _buildZeroesTab(Color primaryText, Color secondaryText, Color borderColor, Color surfaceColor) {
-    final filtered = _query.isEmpty
-        ? MockData.zeroes
-        : MockData.zeroes
-            .where((z) => z.name.toLowerCase().contains(_query.toLowerCase()))
-            .toList();
+    final List<dynamic> filtered = [];
 
     return ListView.separated(
       padding: const EdgeInsets.all(16),
