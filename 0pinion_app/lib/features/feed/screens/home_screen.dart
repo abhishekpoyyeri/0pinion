@@ -40,9 +40,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          '0pinion',
-          style: AppTypography.h2(color: primaryText),
+        title: Image.asset(
+          'assets/title.png',
+          height: 28,
+          fit: BoxFit.contain,
+          color: primaryText,
         ),
         centerTitle: false,
         bottom: PreferredSize(
