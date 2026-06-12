@@ -39,47 +39,80 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final opinionsAsync = ref.watch(feedOpinionsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 120,
-        title: Image.asset(
-          'assets/title.png',
-          height: 112,
-          fit: BoxFit.contain,
-          color: primaryText,
-        ),
-        centerTitle: true,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Column(
-            children: [
-              TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(text: 'For You'),
-                  Tab(text: 'Cooking'),
-                  Tab(text: 'Latest'),
-                ],
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 120.0,
+              collapsedHeight: 64.0,
+              pinned: true,
+              floating: false,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(48),
+                child: Column(
+                  children: [
+                    TabBar(
+                      controller: _tabController,
+                      tabs: const [
+                        Tab(text: 'For You'),
+                        Tab(text: 'Cooking'),
+                        Tab(text: 'Latest'),
+                      ],
+                    ),
+                    Divider(height: 1, color: borderColor),
+                  ],
+                ),
               ),
-              Divider(height: 1, color: borderColor),
-            ],
-          ),
-        ),
-      ),
-      body: opinionsAsync.when(
-        data: (opinions) {
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildFeed(opinions),
-              _buildFeed(opinions.where((o) => o.isCooking).toList()),
-              // Just reversing the stream array for 'Latest' isn't perfect, but works for now.
-              // In a real app we would have a separate query, but 'created_at' desc is already Latest.
-              _buildFeed(opinions.toList()), 
-            ],
-          );
+              flexibleSpace: LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  final double top = constraints.biggest.height;
+                  final double statusBarHeight = MediaQuery.of(context).padding.top;
+                  final double minHeight = statusBarHeight + 64.0 + 48.0;
+                  final double maxHeight = statusBarHeight + 120.0 + 48.0;
+                  
+                  double expandRatio = (top - minHeight) / (maxHeight - minHeight);
+                  expandRatio = expandRatio.clamp(0.0, 1.0);
+
+                  return Container(
+                    padding: EdgeInsets.only(
+                      top: statusBarHeight,
+                      bottom: 48.0, // Space for TabBar
+                      left: 16.0 * (1.0 - expandRatio), // Padding when collapsed left
+                    ),
+                    child: Align(
+                      alignment: Alignment.lerp(
+                        Alignment.centerLeft,
+                        Alignment.center,
+                        expandRatio,
+                      )!,
+                      child: Image.asset(
+                        'assets/title.png',
+                        height: 64.0, // Stays the same size
+                        fit: BoxFit.contain,
+                        color: primaryText,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ];
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        body: opinionsAsync.when(
+          data: (opinions) {
+            return TabBarView(
+              controller: _tabController,
+              children: [
+                _buildFeed(opinions),
+                _buildFeed(opinions.where((o) => o.isCooking).toList()),
+                _buildFeed(opinions.toList()), 
+              ],
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, stack) => Center(child: Text('Error: $err')),
+        ),
       ),
     );
   }
