@@ -1,23 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/widgets/primary_button.dart';
-import '../../../data/mock/mock_data.dart';
 import '../../../data/models/argument.dart';
+import '../../../core/providers/opinion_provider.dart';
 
 /// Opinion Detail screen — full opinion + debate zone
-class OpinionDetailScreen extends StatefulWidget {
+class OpinionDetailScreen extends ConsumerStatefulWidget {
   final String opinionId;
 
   const OpinionDetailScreen({super.key, required this.opinionId});
 
   @override
-  State<OpinionDetailScreen> createState() => _OpinionDetailScreenState();
+  ConsumerState<OpinionDetailScreen> createState() => _OpinionDetailScreenState();
 }
 
-class _OpinionDetailScreenState extends State<OpinionDetailScreen>
+class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -40,14 +41,7 @@ class _OpinionDetailScreenState extends State<OpinionDetailScreen>
     final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
-    final opinion = MockData.opinions.firstWhere(
-      (o) => o.id == widget.opinionId,
-      orElse: () => MockData.opinions.first,
-    );
-
-    final arguments = MockData.sampleArguments
-        .where((a) => a.opinionId == opinion.id)
-        .toList();
+    final opinionsAsync = ref.watch(feedOpinionsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -58,10 +52,22 @@ class _OpinionDetailScreenState extends State<OpinionDetailScreen>
         actions: [
           IconButton(
             icon: Icon(Icons.flag_outlined, color: secondaryText),
-            onPressed: () => context.push('/report/opinion/${opinion.id}'),
+            onPressed: () => context.push('/report/opinion/${widget.opinionId}'),
           ),
         ],
       ),
+      body: opinionsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, st) => Center(child: Text('Error: $e')),
+        data: (opinions) {
+          final opinion = opinions.firstWhere(
+            (o) => o.id == widget.opinionId,
+            // Fallback for demonstration if ID isn't found
+            orElse: () => opinions.first,
+          );
+
+          // We'll stub arguments until we implement argument repository
+          final arguments = <Argument>[];
       body: Column(
         children: [
           // Opinion content
@@ -204,8 +210,10 @@ class _OpinionDetailScreenState extends State<OpinionDetailScreen>
             ),
           ),
         ],
-      ),
-    );
+      );
+    },
+  ),
+);
   }
 
   String _formatTime(DateTime dt) {

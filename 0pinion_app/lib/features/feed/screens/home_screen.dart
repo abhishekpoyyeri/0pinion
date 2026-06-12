@@ -3,17 +3,18 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/opinion_card.dart';
-import '../../../data/mock/mock_data.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/opinion_provider.dart';
 
 /// Home screen — For You / Cooking / Latest tabs with opinion feed
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
+class _HomeScreenState extends ConsumerState<HomeScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
@@ -34,6 +35,8 @@ class _HomeScreenState extends State<HomeScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+
+    final opinionsAsync = ref.watch(feedOpinionsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -59,13 +62,21 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildFeed(MockData.opinions),
-          _buildFeed(MockData.opinions.where((o) => o.isCooking).toList()),
-          _buildFeed(MockData.opinions.reversed.toList()),
-        ],
+      body: opinionsAsync.when(
+        data: (opinions) {
+          return TabBarView(
+            controller: _tabController,
+            children: [
+              _buildFeed(opinions),
+              _buildFeed(opinions.where((o) => o.isCooking).toList()),
+              // Just reversing the stream array for 'Latest' isn't perfect, but works for now.
+              // In a real app we would have a separate query, but 'created_at' desc is already Latest.
+              _buildFeed(opinions.toList()), 
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
       ),
     );
   }

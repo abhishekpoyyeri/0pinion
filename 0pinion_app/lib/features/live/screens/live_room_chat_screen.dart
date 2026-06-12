@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
-import '../../../data/mock/mock_data.dart';
+
 
 /// Live Room Chat screen — text-only real-time discussion
 class LiveRoomChatScreen extends StatefulWidget {
@@ -33,13 +33,10 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
     final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
-    final room = MockData.liveRooms.firstWhere(
-      (r) => r.id == widget.roomId,
-      orElse: () => MockData.liveRooms.first,
-    );
-    final messages = MockData.sampleMessages
-        .where((m) => m.roomId == room.id)
-        .toList();
+    // Using dummy data since MockData is removed.
+    final title = 'Room ${widget.roomId}';
+    final participantsCount = 0;
+    final messages = [];
 
     return Scaffold(
       appBar: AppBar(
@@ -50,7 +47,7 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(room.title, style: AppTypography.bodyMedium(color: primaryText)),
+            Text(title, style: AppTypography.bodyMedium(color: primaryText)),
             Row(
               children: [
                 Container(
@@ -63,7 +60,7 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${room.participantsCount} participants',
+                  '${participantsCount} participants',
                   style: AppTypography.caption(color: secondaryText),
                 ),
               ],
@@ -83,7 +80,7 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final msg = messages[index];
-                final isMe = msg.senderId == MockData.currentUser.id;
+                final isMe = false;
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),

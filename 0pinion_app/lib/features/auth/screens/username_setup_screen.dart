@@ -1,23 +1,27 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../core/providers/supabase_provider.dart';
+import '../../../data/repositories/auth_repository.dart';
 
 /// Username setup screen — choose username, display name, see generated avatar
-class UsernameSetupScreen extends StatefulWidget {
+class UsernameSetupScreen extends ConsumerStatefulWidget {
   const UsernameSetupScreen({super.key});
 
   @override
-  State<UsernameSetupScreen> createState() => _UsernameSetupScreenState();
+  ConsumerState<UsernameSetupScreen> createState() => _UsernameSetupScreenState();
 }
 
-class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
+class _UsernameSetupScreenState extends ConsumerState<UsernameSetupScreen> {
   final _usernameController = TextEditingController();
   final _displayNameController = TextEditingController();
   int _avatarSeed = Random().nextInt(99999);
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -30,6 +34,41 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
     setState(() {
       _avatarSeed = Random().nextInt(99999);
     });
+  }
+
+  Future<void> _saveProfile() async {
+    final username = _usernameController.text.trim();
+    final displayName = _displayNameController.text.trim();
+
+    if (username.isEmpty || displayName.isEmpty) return;
+
+    final user = ref.read(currentUserProvider);
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: Not authenticated.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      await authRepo.createProfile(
+        userId: user.id,
+        username: username,
+        displayName: displayName,
+        avatarSeed: _avatarSeed,
+      );
+      if (mounted) context.go('/select-zeroes');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -112,10 +151,12 @@ class _UsernameSetupScreenState extends State<UsernameSetupScreen> {
               ),
               const SizedBox(height: 40),
 
-              PrimaryButton(
-                label: 'Continue',
-                onPressed: () => context.go('/select-zeroes'),
-              ),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : PrimaryButton(
+                      label: 'Continue',
+                      onPressed: _saveProfile,
+                    ),
               const SizedBox(height: 32),
             ],
           ),

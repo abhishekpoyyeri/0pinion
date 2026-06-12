@@ -4,16 +4,20 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/primary_button.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/supabase_provider.dart';
+import '../../../data/repositories/auth_repository.dart';
+
 /// Splash / Landing screen
 /// Displays "0pinion" wordmark, tagline, and Get Started / Login buttons
-class SplashScreen extends StatefulWidget {
+class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
 
   @override
-  State<SplashScreen> createState() => _SplashScreenState();
+  ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen>
+class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeIn;
@@ -32,6 +36,25 @@ class _SplashScreenState extends State<SplashScreen>
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     _controller.forward();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuthAndProfile();
+    });
+  }
+
+  Future<void> _checkAuthAndProfile() async {
+    final user = ref.read(currentUserProvider);
+    if (user != null) {
+      final authRepo = ref.read(authRepositoryProvider);
+      final hasProfile = await authRepo.hasProfile(user.id);
+      if (mounted) {
+        if (hasProfile) {
+          context.go('/home');
+        } else {
+          context.go('/username-setup');
+        }
+      }
+    }
   }
 
   @override

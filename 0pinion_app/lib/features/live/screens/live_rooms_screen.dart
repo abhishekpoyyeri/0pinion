@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
-import '../../../data/mock/mock_data.dart';
+
 
 /// Live Rooms screen — browse active text-only debate rooms
 class LiveRoomsScreen extends StatelessWidget {
@@ -35,10 +35,10 @@ class LiveRoomsScreen extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
-              itemCount: MockData.liveRooms.length,
+              itemCount: 0,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final room = MockData.liveRooms[index];
+                final room = null;
                 return GestureDetector(
                   onTap: () => context.push('/live/${room.id}'),
                   child: Container(

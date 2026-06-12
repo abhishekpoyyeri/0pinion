@@ -4,24 +4,72 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/primary_button.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../data/repositories/auth_repository.dart';
+
 /// Sign Up screen — Email/Password form + Google auth
-class SignUpScreen extends StatefulWidget {
+class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
 
   @override
-  State<SignUpScreen> createState() => _SignUpScreenState();
+  ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+  bool _isLogin = false; // Toggle between Login and Sign Up
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
+    if (email.isEmpty || password.isEmpty) return;
+
+    setState(() => _isLoading = true);
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      
+      if (_isLogin) {
+        final res = await authRepo.signInWithEmail(email, password);
+        if (res.session != null) {
+          final hasProfile = await authRepo.hasProfile(res.session!.user.id);
+          if (hasProfile) {
+            if (mounted) context.go('/home');
+          } else {
+            if (mounted) context.go('/username-setup');
+          }
+        }
+      } else {
+        final res = await authRepo.signUpWithEmail(email, password);
+        if (res.session == null) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Please check your email to confirm your account, or disable Email Confirmations in Supabase Dashboard.')),
+            );
+          }
+        } else {
+          if (mounted) context.go('/username-setup');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -48,12 +96,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
               // Title
               Text(
-                'Create Account',
+                _isLogin ? 'Welcome Back' : 'Create Account',
                 style: AppTypography.h1(color: primaryText),
               ),
               const SizedBox(height: 8),
               Text(
-                'Join the debate.',
+                _isLogin ? 'Login to continue.' : 'Join the debate.',
                 style: AppTypography.body(color: secondaryText),
               ),
               const SizedBox(height: 40),
@@ -77,7 +125,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  hintText: 'Create a password',
+                  hintText: _isLogin ? 'Enter your password' : 'Create a password',
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -92,10 +140,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
               const SizedBox(height: 32),
 
               // Sign Up button
-              PrimaryButton(
-                label: 'Sign Up',
-                onPressed: () => context.go('/username-setup'),
-              ),
+              _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : PrimaryButton(
+                      label: _isLogin ? 'Log In' : 'Sign Up',
+                      onPressed: _submit,
+                    ),
               const SizedBox(height: 24),
 
               // Divider
@@ -116,7 +166,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 width: double.infinity,
                 height: 52,
                 child: OutlinedButton.icon(
-                  onPressed: () => context.go('/username-setup'),
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Google Sign-In not implemented yet.')),
+                    );
+                  },
                   icon: const Text('G', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                   label: Text('Continue with Google', style: AppTypography.button()),
                 ),
@@ -125,21 +179,28 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
               // Login link
               Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Already have an account? ',
-                      style: AppTypography.caption(color: secondaryText),
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () {
+                    setState(() => _isLogin = !_isLogin);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _isLogin ? 'Don\'t have an account? ' : 'Already have an account? ',
+                          style: AppTypography.caption(color: secondaryText),
+                        ),
+                        Text(
+                          _isLogin ? 'Sign Up' : 'Login',
+                          style: AppTypography.captionMedium(color: primaryText),
+                        ),
+                      ],
                     ),
-                    GestureDetector(
-                      onTap: () {},
-                      child: Text(
-                        'Login',
-                        style: AppTypography.captionMedium(color: primaryText),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
               const SizedBox(height: 32),

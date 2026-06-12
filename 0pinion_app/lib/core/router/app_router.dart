@@ -17,107 +17,132 @@ import '../../features/live/screens/live_room_chat_screen.dart';
 import '../../features/report/screens/report_screen.dart';
 import '../widgets/bottom_nav.dart';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/providers/supabase_provider.dart';
+
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
-final GoRouter appRouter = GoRouter(
-  navigatorKey: _rootNavigatorKey,
-  initialLocation: '/splash',
-  routes: [
-    // ─── Auth & Onboarding ───
-    GoRoute(
-      path: '/splash',
-      builder: (context, state) => const SplashScreen(),
-    ),
-    GoRoute(
-      path: '/signup',
-      builder: (context, state) => const SignUpScreen(),
-    ),
-    GoRoute(
-      path: '/username-setup',
-      builder: (context, state) => const UsernameSetupScreen(),
-    ),
-    GoRoute(
-      path: '/select-zeroes',
-      builder: (context, state) => const SelectZeroesScreen(),
-    ),
-    GoRoute(
-      path: '/welcome',
-      builder: (context, state) => const WelcomeScreen(),
-    ),
+final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authStateProvider);
+  final isAuthenticated = authState.value?.session != null;
 
-    // ─── Main App Shell (with bottom navigation) ───
-    ShellRoute(
-      navigatorKey: _shellNavigatorKey,
-      builder: (context, state, child) => BottomNavShell(child: child),
-      routes: [
-        GoRoute(
-          path: '/home',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: HomeScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/search',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: SearchScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/create',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: CreateOpinionScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/live',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: LiveRoomsScreen(),
-          ),
-        ),
-        GoRoute(
-          path: '/profile',
-          pageBuilder: (context, state) => const NoTransitionPage(
-            child: ProfileScreen(),
-          ),
-        ),
-      ],
-    ),
+  return GoRouter(
+    navigatorKey: _rootNavigatorKey,
+    initialLocation: '/splash',
+    redirect: (context, state) {
+      final isAuthRoute = state.matchedLocation == '/splash' || 
+                          state.matchedLocation == '/signup' || 
+                          state.matchedLocation == '/username-setup' ||
+                          state.matchedLocation == '/select-zeroes' ||
+                          state.matchedLocation == '/welcome';
+      
+      // Allow auth state to initialize
+      if (authState.isLoading) return null;
 
-    // ─── Detail Screens (push on top of shell) ───
-    GoRoute(
-      parentNavigatorKey: _rootNavigatorKey,
-      path: '/opinion/:id',
-      builder: (context, state) => OpinionDetailScreen(
-        opinionId: state.pathParameters['id']!,
+      if (!isAuthenticated && !isAuthRoute) {
+        // Not logged in, trying to access protected route
+        return '/splash';
+      }
+
+      return null;
+    },
+    routes: [
+      // ─── Auth & Onboarding ───
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
       ),
-    ),
-    GoRoute(
-      parentNavigatorKey: _rootNavigatorKey,
-      path: '/argument/:opinionId',
-      builder: (context, state) => WriteArgumentScreen(
-        opinionId: state.pathParameters['opinionId']!,
+      GoRoute(
+        path: '/signup',
+        builder: (context, state) => const SignUpScreen(),
       ),
-    ),
-    GoRoute(
-      parentNavigatorKey: _rootNavigatorKey,
-      path: '/zeroes',
-      builder: (context, state) => const BrowseZeroesScreen(),
-    ),
-    GoRoute(
-      parentNavigatorKey: _rootNavigatorKey,
-      path: '/live/:roomId',
-      builder: (context, state) => LiveRoomChatScreen(
-        roomId: state.pathParameters['roomId']!,
+      GoRoute(
+        path: '/username-setup',
+        builder: (context, state) => const UsernameSetupScreen(),
       ),
-    ),
-    GoRoute(
-      parentNavigatorKey: _rootNavigatorKey,
-      path: '/report/:contentType/:contentId',
-      builder: (context, state) => ReportScreen(
-        contentType: state.pathParameters['contentType']!,
-        contentId: state.pathParameters['contentId']!,
+      GoRoute(
+        path: '/select-zeroes',
+        builder: (context, state) => const SelectZeroesScreen(),
       ),
-    ),
-  ],
-);
+      GoRoute(
+        path: '/welcome',
+        builder: (context, state) => const WelcomeScreen(),
+      ),
+
+      // ─── Main App Shell (with bottom navigation) ───
+      ShellRoute(
+        navigatorKey: _shellNavigatorKey,
+        builder: (context, state, child) => BottomNavShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/home',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: HomeScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/search',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: SearchScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/create',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: CreateOpinionScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/live',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: LiveRoomsScreen(),
+            ),
+          ),
+          GoRoute(
+            path: '/profile',
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ProfileScreen(),
+            ),
+          ),
+        ],
+      ),
+
+      // ─── Detail Screens (push on top of shell) ───
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/opinion/:id',
+        builder: (context, state) => OpinionDetailScreen(
+          opinionId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/argument/:opinionId',
+        builder: (context, state) => WriteArgumentScreen(
+          opinionId: state.pathParameters['opinionId']!,
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/zeroes',
+        builder: (context, state) => const BrowseZeroesScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/live/:roomId',
+        builder: (context, state) => LiveRoomChatScreen(
+          roomId: state.pathParameters['roomId']!,
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/report/:contentType/:contentId',
+        builder: (context, state) => ReportScreen(
+          contentType: state.pathParameters['contentType']!,
+          contentId: state.pathParameters['contentId']!,
+        ),
+      ),
+    ],
+  );
+});

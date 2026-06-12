@@ -4,7 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/zero_chip.dart';
-import '../../../data/mock/mock_data.dart';
+
 
 /// Select Zeroes screen — choose interest communities
 class SelectZeroesScreen extends StatefulWidget {
@@ -60,17 +60,17 @@ class _SelectZeroesScreenState extends State<SelectZeroesScreen> {
                   child: Wrap(
                     spacing: 10,
                     runSpacing: 10,
-                    children: MockData.zeroes.map((zero) {
-                      final isSelected = _selectedZeroes.contains(zero.name);
+                    children: ['Technology', 'Politics', 'Philosophy', 'Science'].map((name) {
+                      final isSelected = _selectedZeroes.contains(name);
                       return ZeroChip(
-                        name: zero.name,
+                        name: name,
                         isSelected: isSelected,
                         onTap: () {
                           setState(() {
                             if (isSelected) {
-                              _selectedZeroes.remove(zero.name);
+                              _selectedZeroes.remove(name);
                             } else {
-                              _selectedZeroes.add(zero.name);
+                              _selectedZeroes.add(name);
                             }
                           });
                         },
