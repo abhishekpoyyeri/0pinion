@@ -4,7 +4,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
 import '../../../data/mock/mock_data.dart';
-import '../../../data/models/live_room.dart';
 
 /// Live Room Chat screen — text-only real-time discussion
 class LiveRoomChatScreen extends StatefulWidget {
@@ -36,14 +35,7 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
 
     final room = MockData.liveRooms.firstWhere(
       (r) => r.id == widget.roomId,
-      orElse: () => LiveRoom(
-        id: 'fallback',
-        title: 'Unknown Room',
-        hostId: '',
-        hostUsername: '',
-        participantsCount: 0,
-        createdAt: DateTime.now(),
-      ),
+      orElse: () => MockData.liveRooms.first,
     );
     final messages = MockData.sampleMessages
         .where((m) => m.roomId == room.id)

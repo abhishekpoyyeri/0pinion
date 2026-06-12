@@ -5,7 +5,6 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/mock/mock_data.dart';
-import '../../../data/models/opinion.dart';
 import '../../../data/models/argument.dart';
 
 /// Opinion Detail screen — full opinion + debate zone
@@ -43,18 +42,7 @@ class _OpinionDetailScreenState extends State<OpinionDetailScreen>
 
     final opinion = MockData.opinions.firstWhere(
       (o) => o.id == widget.opinionId,
-      orElse: () => Opinion(
-        id: 'fallback',
-        title: 'No opinion selected',
-        content: '',
-        authorId: '',
-        authorUsername: '',
-        zeroes: [],
-        supportCount: 0,
-        opposeCount: 0,
-        questionCount: 0,
-        createdAt: DateTime.now(),
-      ),
+      orElse: () => MockData.opinions.first,
     );
 
     final arguments = MockData.sampleArguments
