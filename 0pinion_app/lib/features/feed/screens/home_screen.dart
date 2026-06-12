@@ -43,7 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              expandedHeight: 120.0,
+              expandedHeight: 180.0,
               collapsedHeight: 64.0,
               pinned: true,
               floating: false,
@@ -68,8 +68,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 builder: (BuildContext context, BoxConstraints constraints) {
                   final double top = constraints.biggest.height;
                   final double statusBarHeight = MediaQuery.of(context).padding.top;
+                  
+                  // The collapsed height is toolbar + bottom + statusbar
                   final double minHeight = statusBarHeight + 64.0 + 48.0;
-                  final double maxHeight = statusBarHeight + 120.0 + 48.0;
+                  // The expanded height is expandedHeight + statusbar
+                  final double maxHeight = statusBarHeight + 180.0;
                   
                   double expandRatio = (top - minHeight) / (maxHeight - minHeight);
                   expandRatio = expandRatio.clamp(0.0, 1.0);
@@ -77,18 +80,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   return Container(
                     padding: EdgeInsets.only(
                       top: statusBarHeight,
-                      bottom: 48.0, // Space for TabBar
-                      left: 16.0 * (1.0 - expandRatio), // Padding when collapsed left
+                      bottom: 48.0 + 8.0, // Space for TabBar + a little bottom padding
+                      left: 24.0 * (1.0 - expandRatio), // Safe left padding when collapsed
                     ),
                     child: Align(
                       alignment: Alignment.lerp(
-                        Alignment.centerLeft,
-                        Alignment.center,
+                        Alignment.bottomLeft,
+                        Alignment.bottomCenter,
                         expandRatio,
                       )!,
                       child: Image.asset(
                         'assets/title.png',
-                        height: 64.0, // Stays the same size
+                        height: 52.0, // A bit smaller so it fits elegantly in the 64px collapsed toolbar
                         fit: BoxFit.contain,
                         color: primaryText,
                       ),
