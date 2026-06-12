@@ -68,8 +68,8 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
 
           // We'll stub arguments until we implement argument repository
           final arguments = <Argument>[];
-      body: Column(
-        children: [
+          return Column(
+            children: [
           // Opinion content
           Expanded(
             child: SingleChildScrollView(

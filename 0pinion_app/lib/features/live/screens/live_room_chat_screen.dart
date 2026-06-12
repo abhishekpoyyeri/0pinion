@@ -48,12 +48,11 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              room.title,
+              title,
               style: AppTypography.bodyMedium(color: primaryText),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            Text(title, style: AppTypography.bodyMedium(color: primaryText)),
             Row(
               children: [
                 Container(
