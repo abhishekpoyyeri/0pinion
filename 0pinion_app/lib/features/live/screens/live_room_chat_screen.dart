@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
+import '../../../data/models/live_room.dart';
 
 
 /// Live Room Chat screen — text-only real-time discussion
@@ -35,8 +36,8 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
 
     // Using dummy data since MockData is removed.
     final title = 'Room ${widget.roomId}';
-    final participantsCount = 0;
-    final messages = [];
+    const participantsCount = 0;
+    const List<ChatMessage> messages = [];
 
     return Scaffold(
       appBar: AppBar(
@@ -65,7 +66,7 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${participantsCount} participants',
+                  '$participantsCount participants',
                   style: AppTypography.caption(color: secondaryText),
                 ),
               ],
@@ -85,7 +86,7 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
               itemCount: messages.length,
               itemBuilder: (context, index) {
                 final msg = messages[index];
-                final isMe = false;
+                final isMe = msg.senderId == 'me';
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),

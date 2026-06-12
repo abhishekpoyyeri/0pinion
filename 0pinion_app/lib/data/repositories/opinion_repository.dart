@@ -42,7 +42,7 @@ class OpinionRepository {
       'author_id': authorId,
       'is_anonymous': isAnonymous,
       'is_cooking': false,
-      if (zeroId != null) 'zero_id': zeroId,
+      'zero_id': ?zeroId,
     });
   }
 }

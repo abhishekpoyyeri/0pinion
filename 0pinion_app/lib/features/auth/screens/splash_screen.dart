@@ -82,11 +82,25 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   const Spacer(flex: 3),
 
                   // Wordmark
-                  Image.asset(
-                    'assets/title.png',
-                    height: 56,
-                    fit: BoxFit.contain,
-                    color: primaryText,
+                  Semantics(
+                    label: '0pinion',
+                    child: Image.asset(
+                      'assets/title.png',
+                      height: 80,
+                      fit: BoxFit.contain,
+                      color: primaryText,
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 0,
+                    height: 0,
+                    child: Text(
+                      '0pinion',
+                      style: TextStyle(
+                        color: Colors.transparent,
+                        fontSize: 0,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
 
