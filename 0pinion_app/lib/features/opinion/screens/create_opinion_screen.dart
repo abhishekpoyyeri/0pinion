@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/error_handler.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/providers/supabase_provider.dart';
 import '../../../data/repositories/opinion_repository.dart';
