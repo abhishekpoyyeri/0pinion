@@ -1,3 +1,5 @@
+import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
+import 'package:opinion_app/core/widgets/video_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -91,7 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       )!,
                       child: Image.asset(
                         'assets/title.png',
-                        height: 36.0, // A bit smaller so it fits elegantly in the 64px collapsed toolbar
+                        height: 28.0, // Reduced to prevent the zoomed-in look
                         fit: BoxFit.contain,
                         color: primaryText,
                       ),
@@ -102,27 +104,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             ),
           ];
         },
-        body: opinionsAsync.when(
-          data: (opinions) {
-            return TabBarView(
-              controller: _tabController,
-              children: [
-                _buildFeed(opinions),
-                _buildFeed(opinions.where((o) => o.isCooking).toList()),
-                _buildFeed(opinions.toList()), 
-              ],
-            );
-          },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(child: Text('Error: $err')),
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildTab(opinionsAsync, (opinions) => opinions),
+            _buildTab(opinionsAsync, (opinions) => opinions.where((o) => o.isCooking).toList()),
+            _buildTab(opinionsAsync, (opinions) => opinions.toList()), 
+          ],
         ),
       ),
     );
   }
 
+  Widget _buildTab(AsyncValue opinionsAsync, List Function(List) filter) {
+    return opinionsAsync.when(
+      data: (opinions) => _buildFeed(filter(opinions as List)),
+      loading: () => const Center(child: VideoLoader()),
+      error: (err, stack) => Center(child: Text('Error: $err')),
+    );
+  }
+
   Widget _buildFeed(List opinions) {
     if (opinions.isEmpty) {
-      return RefreshIndicator(
+      return VideoRefreshIndicator(
         onRefresh: () async {
           ref.invalidate(feedOpinionsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
@@ -161,7 +165,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       );
     }
 
-    return RefreshIndicator(
+    return VideoRefreshIndicator(
       onRefresh: () async {
         ref.invalidate(feedOpinionsProvider);
         await Future.delayed(const Duration(milliseconds: 500));

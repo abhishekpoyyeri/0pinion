@@ -1,3 +1,4 @@
+import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -103,7 +104,7 @@ class _SearchScreenState extends State<SearchScreen>
     final List<Opinion> filtered = [];
 
     if (filtered.isEmpty) {
-      return RefreshIndicator(
+      return VideoRefreshIndicator(
         onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -117,7 +118,7 @@ class _SearchScreenState extends State<SearchScreen>
       );
     }
 
-    return RefreshIndicator(
+    return VideoRefreshIndicator(
       onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -138,7 +139,7 @@ class _SearchScreenState extends State<SearchScreen>
     final List<dynamic> filtered = [];
 
     if (filtered.isEmpty) {
-      return RefreshIndicator(
+      return VideoRefreshIndicator(
         onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
@@ -152,7 +153,7 @@ class _SearchScreenState extends State<SearchScreen>
       );
     }
 
-    return RefreshIndicator(
+    return VideoRefreshIndicator(
       onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -208,7 +209,7 @@ class _SearchScreenState extends State<SearchScreen>
   }
 
   Widget _buildUsersTab(Color secondaryText) {
-    return RefreshIndicator(
+    return VideoRefreshIndicator(
       onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),

@@ -1,3 +1,5 @@
+import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
+import 'package:opinion_app/core/widgets/video_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
@@ -150,7 +152,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       data: (opinions) {
         final userOpinions = opinions.where((o) => o.authorId == userId).toList();
         if (userOpinions.isEmpty) {
-          return RefreshIndicator(
+          return VideoRefreshIndicator(
             onRefresh: () async {
               ref.invalidate(feedOpinionsProvider);
               ref.invalidate(profileStatsProvider);
@@ -168,7 +170,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ),
           );
         }
-        return RefreshIndicator(
+        return VideoRefreshIndicator(
           onRefresh: () async {
             ref.invalidate(feedOpinionsProvider);
             ref.invalidate(profileStatsProvider);
@@ -208,7 +210,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: VideoLoader()),
       error: (e, _) => Center(child: Text('Error loading opinions', style: AppTypography.body(color: secondaryText))),
     );
   }
@@ -220,7 +222,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return argumentsAsync.when(
       data: (arguments) {
         if (arguments.isEmpty) {
-          return RefreshIndicator(
+          return VideoRefreshIndicator(
             onRefresh: () async {
               ref.invalidate(userArgumentsProvider);
               ref.invalidate(profileStatsProvider);
@@ -243,7 +245,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           );
         }
 
-        return RefreshIndicator(
+        return VideoRefreshIndicator(
           onRefresh: () async {
             ref.invalidate(userArgumentsProvider);
             ref.invalidate(profileStatsProvider);
@@ -328,7 +330,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: VideoLoader()),
       error: (e, _) => Center(child: Text('Error loading arguments', style: AppTypography.body(color: secondaryText))),
     );
   }
@@ -339,7 +341,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return zeroesAsync.when(
       data: (zeroes) {
         if (zeroes.isEmpty) {
-          return RefreshIndicator(
+          return VideoRefreshIndicator(
             onRefresh: () async {
               ref.invalidate(userZeroesProvider);
               ref.invalidate(profileStatsProvider);
@@ -362,7 +364,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           );
         }
 
-        return RefreshIndicator(
+        return VideoRefreshIndicator(
           onRefresh: () async {
             ref.invalidate(userZeroesProvider);
             ref.invalidate(profileStatsProvider);
@@ -423,7 +425,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: VideoLoader()),
       error: (e, _) => Center(child: Text('Error loading zeroes', style: AppTypography.body(color: secondaryText))),
     );
   }

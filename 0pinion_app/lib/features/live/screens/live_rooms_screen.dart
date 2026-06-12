@@ -1,3 +1,4 @@
+import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -33,7 +34,7 @@ class LiveRoomsScreen extends StatelessWidget {
           ),
           Divider(height: 1, color: borderColor),
           Expanded(
-            child: RefreshIndicator(
+            child: VideoRefreshIndicator(
               onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
               child: ListView.separated(
                 physics: const AlwaysScrollableScrollPhysics(),

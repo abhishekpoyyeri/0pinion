@@ -9,6 +9,7 @@ import '../../../core/providers/supabase_provider.dart';
 import '../../../data/repositories/argument_repository.dart';
 import '../../../core/providers/argument_provider.dart';
 import '../../../core/providers/opinion_provider.dart';
+import '../../../core/utils/error_handler.dart';
 
 /// Write Argument screen — compose a support/oppose/question argument
 class WriteArgumentScreen extends ConsumerStatefulWidget {
@@ -159,9 +160,7 @@ class _WriteArgumentScreenState extends ConsumerState<WriteArgumentScreen> {
                   ? () async {
                       final user = ref.read(currentUserProvider);
                       if (user == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Please log in to submit arguments')),
-                        );
+                        AppErrorHandler.showErrorDialog(context, 'Please log in to submit arguments');
                         return;
                       }
 
@@ -189,9 +188,7 @@ class _WriteArgumentScreenState extends ConsumerState<WriteArgumentScreen> {
                         }
                       } catch (e) {
                         if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $e')),
-                          );
+                          AppErrorHandler.showErrorDialog(context, e);
                         }
                       }
                     }

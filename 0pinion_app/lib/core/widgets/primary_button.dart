@@ -1,3 +1,4 @@
+import 'package:opinion_app/core/widgets/video_loader.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_typography.dart';
 
@@ -23,13 +24,10 @@ class PrimaryButton extends StatelessWidget {
     final button = ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       child: isLoading
-          ? SizedBox(
+          ? const SizedBox(
               width: 20,
               height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Theme.of(context).colorScheme.onPrimary,
-              ),
+              child: VideoLoader(width: 20, height: 20),
             )
           : Row(
               mainAxisSize: MainAxisSize.min,
