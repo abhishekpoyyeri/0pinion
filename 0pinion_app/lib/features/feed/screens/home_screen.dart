@@ -40,10 +40,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 80,
+        toolbarHeight: 120,
         title: Image.asset(
           'assets/title.png',
-          height: 64,
+          height: 100,
           fit: BoxFit.contain,
           color: primaryText,
         ),
