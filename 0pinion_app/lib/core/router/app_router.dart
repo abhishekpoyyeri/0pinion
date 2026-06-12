@@ -31,20 +31,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
     redirect: (context, state) {
-      final isAuthRoute = state.matchedLocation == '/splash' || 
-                          state.matchedLocation == '/signup' || 
-                          state.matchedLocation == '/username-setup' ||
-                          state.matchedLocation == '/select-zeroes' ||
-                          state.matchedLocation == '/welcome';
-      
-      // Allow auth state to initialize
-      if (authState.isLoading) return null;
+      final isGoingToAuth = state.matchedLocation == '/splash' || 
+                            state.matchedLocation == '/signup';
 
-      if (!isAuthenticated && !isAuthRoute) {
-        // Not logged in, trying to access protected route
-        return '/splash';
+      if (!isAuthenticated) {
+        if (!isGoingToAuth &&
+            state.matchedLocation != '/username-setup' &&
+            state.matchedLocation != '/select-zeroes' &&
+            state.matchedLocation != '/welcome') {
+          return '/splash';
+        }
+      } else {
+        if (isGoingToAuth) {
+          return '/home';
+        }
       }
-
       return null;
     },
     routes: [

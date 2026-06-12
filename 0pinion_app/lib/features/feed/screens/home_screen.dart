@@ -43,7 +43,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              expandedHeight: 180.0,
+              expandedHeight: 140.0,
               collapsedHeight: 64.0,
               pinned: true,
               floating: false,
@@ -72,7 +72,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   // The collapsed height is toolbar + bottom + statusbar
                   final double minHeight = statusBarHeight + 64.0 + 48.0;
                   // The expanded height is expandedHeight + statusbar
-                  final double maxHeight = statusBarHeight + 180.0;
+                  final double maxHeight = statusBarHeight + 140.0;
                   
                   double expandRatio = (top - minHeight) / (maxHeight - minHeight);
                   expandRatio = expandRatio.clamp(0.0, 1.0);
@@ -91,7 +91,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       )!,
                       child: Image.asset(
                         'assets/title.png',
-                        height: 52.0, // A bit smaller so it fits elegantly in the 64px collapsed toolbar
+                        height: 36.0, // A bit smaller so it fits elegantly in the 64px collapsed toolbar
                         fit: BoxFit.contain,
                         color: primaryText,
                       ),

@@ -1,22 +1,18 @@
-from PIL import Image, ImageChops
-
-def trim(im):
-    bg = Image.new(im.mode, im.size, im.getpixel((0,0)))
-    diff = ImageChops.difference(im, bg)
-    diff = ImageChops.add(diff, diff, 2.0, -100)
-    bbox = diff.getbbox()
-    if bbox:
-        return im.crop(bbox)
-    return im
+from PIL import Image
 
 def trim_transparency(image_path):
     im = Image.open(image_path)
-    # Get the bounding box of the non-transparent alpha channel
-    bbox = im.getbbox()
+    if im.mode != 'RGBA':
+        im = im.convert('RGBA')
+    # Get the alpha channel
+    alpha = im.getchannel('A')
+    # Threshold the alpha channel to ignore faint border noise
+    threshold_alpha = alpha.point(lambda p: 255 if p > 10 else 0)
+    bbox = threshold_alpha.getbbox()
     if bbox:
         im = im.crop(bbox)
         im.save(image_path)
-        print("Image cropped successfully")
+        print(f"Image cropped successfully. New size: {im.size}")
     else:
         print("No cropping needed")
 

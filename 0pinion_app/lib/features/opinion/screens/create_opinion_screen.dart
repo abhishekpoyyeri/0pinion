@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/primary_button.dart';
-import '../../../core/providers/opinion_provider.dart';
 import '../../../core/providers/supabase_provider.dart';
 import '../../../data/repositories/opinion_repository.dart';
 import '../../../data/repositories/auth_repository.dart';
@@ -162,7 +161,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
                     selected: isSelected,
                     onSelected: (selected) {
                       setState(() {
-                        _selectedZeroId = selected ? zero['id'] as String? : null;
+                        _selectedZeroId = selected ? zero['id'] : null;
                       });
                     },
                     backgroundColor: Colors.transparent,
