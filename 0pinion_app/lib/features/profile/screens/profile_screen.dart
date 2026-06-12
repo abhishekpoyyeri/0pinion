@@ -144,13 +144,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       data: (opinions) {
         final userOpinions = opinions.where((o) => o.authorId == userId).toList();
         if (userOpinions.isEmpty) {
-          return Center(child: Text('No opinions yet', style: AppTypography.body(color: secondaryText)));
+          return RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(feedOpinionsProvider);
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: 200,
+                  child: Center(child: Text('No opinions yet', style: AppTypography.body(color: secondaryText))),
+                )
+              ],
+            ),
+          );
         }
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: userOpinions.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 8),
-          itemBuilder: (context, index) {
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(feedOpinionsProvider);
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            itemCount: userOpinions.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
             final op = userOpinions[index];
             return Container(
               padding: const EdgeInsets.all(16),
@@ -171,6 +191,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
               ),
             );
           },
+        ),
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -179,19 +200,41 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   }
 
   Widget _buildArgumentsTab(Color primaryText, Color secondaryText, Color borderColor) {
-    return Center(
-      child: Text(
-        'Your arguments will appear here',
-        style: AppTypography.body(color: secondaryText),
+    return RefreshIndicator(
+      onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(
+            height: 200,
+            child: Center(
+              child: Text(
+                'Your arguments will appear here',
+                style: AppTypography.body(color: secondaryText),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildZeroesTab(Color primaryText, Color secondaryText, Color borderColor) {
-    return Center(
-      child: Text(
-        'Your joined zeroes will appear here',
-        style: AppTypography.body(color: secondaryText),
+    return RefreshIndicator(
+      onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(
+            height: 200,
+            child: Center(
+              child: Text(
+                'Your joined zeroes will appear here',
+                style: AppTypography.body(color: secondaryText),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

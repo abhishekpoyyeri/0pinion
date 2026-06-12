@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../data/models/argument.dart';
+import '../../../core/providers/supabase_provider.dart';
+import '../../../data/repositories/argument_repository.dart';
+import '../../../core/providers/argument_provider.dart';
+import '../../../core/providers/opinion_provider.dart';
 
 /// Write Argument screen — compose a support/oppose/question argument
-class WriteArgumentScreen extends StatefulWidget {
+class WriteArgumentScreen extends ConsumerStatefulWidget {
   final String opinionId;
 
   const WriteArgumentScreen({super.key, required this.opinionId});
 
   @override
-  State<WriteArgumentScreen> createState() => _WriteArgumentScreenState();
+  ConsumerState<WriteArgumentScreen> createState() => _WriteArgumentScreenState();
 }
 
-class _WriteArgumentScreenState extends State<WriteArgumentScreen> {
+class _WriteArgumentScreenState extends ConsumerState<WriteArgumentScreen> {
   final _controller = TextEditingController();
   ArgumentType _selectedType = ArgumentType.support;
   bool _isAnonymous = false;
@@ -151,17 +156,44 @@ class _WriteArgumentScreenState extends State<WriteArgumentScreen> {
             child: PrimaryButton(
               label: 'Submit Argument',
               onPressed: _controller.text.trim().isNotEmpty
-                  ? () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Argument submitted',
-                            style: AppTypography.caption(),
-                          ),
-                          backgroundColor: primaryText,
-                        ),
-                      );
-                      context.pop();
+                  ? () async {
+                      final user = ref.read(currentUserProvider);
+                      if (user == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Please log in to submit arguments')),
+                        );
+                        return;
+                      }
+
+                      try {
+                        await ref.read(argumentRepositoryProvider).createArgument(
+                          opinionId: widget.opinionId,
+                          authorId: user.id,
+                          type: _selectedType.name,
+                          content: _controller.text.trim(),
+                          isAnonymous: _isAnonymous,
+                        );
+
+                        // Force Riverpod to fetch the latest arguments and feed opinions
+                        ref.invalidate(opinionArgumentsProvider(widget.opinionId));
+                        ref.invalidate(feedOpinionsProvider);
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Argument submitted', style: AppTypography.caption()),
+                              backgroundColor: primaryText,
+                            ),
+                          );
+                          context.pop();
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error: $e')),
+                          );
+                        }
+                      }
                     }
                   : null,
             ),

@@ -102,27 +102,64 @@ class _SearchScreenState extends State<SearchScreen>
   Widget _buildOpinionsTab(Color primaryText, Color secondaryText) {
     final List<Opinion> filtered = [];
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: filtered.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        return OpinionCard(
-          opinion: filtered[index],
-          onTap: () => context.push('/opinion/${filtered[index].id}'),
-        );
-      },
+    if (filtered.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: 200,
+              child: Center(child: Text('No opinions found', style: AppTypography.body(color: secondaryText))),
+            )
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: filtered.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          return OpinionCard(
+            opinion: filtered[index],
+            onTap: () => context.push('/opinion/${filtered[index].id}'),
+          );
+        },
+      ),
     );
   }
 
   Widget _buildZeroesTab(Color primaryText, Color secondaryText, Color borderColor, Color surfaceColor) {
     final List<dynamic> filtered = [];
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: filtered.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 8),
-      itemBuilder: (context, index) {
+    if (filtered.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: 200,
+              child: Center(child: Text('No zeroes found', style: AppTypography.body(color: secondaryText))),
+            )
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: filtered.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 8),
+        itemBuilder: (context, index) {
         final zero = filtered[index];
         return Container(
           padding: const EdgeInsets.all(16),
@@ -166,19 +203,29 @@ class _SearchScreenState extends State<SearchScreen>
           ),
         );
       },
+    ),
     );
   }
 
   Widget _buildUsersTab(Color secondaryText) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return RefreshIndicator(
+      onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         children: [
-          Icon(Icons.person_search_outlined, size: 48, color: secondaryText),
-          const SizedBox(height: 16),
-          Text(
-            'Search for users',
-            style: AppTypography.body(color: secondaryText),
+          SizedBox(
+            height: 300,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.person_search_outlined, size: 48, color: secondaryText),
+                const SizedBox(height: 16),
+                Text(
+                  'Search for users',
+                  style: AppTypography.body(color: secondaryText),
+                ),
+              ],
+            ),
           ),
         ],
       ),

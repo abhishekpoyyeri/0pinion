@@ -83,24 +83,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Widget _buildFeed(List opinions) {
     if (opinions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      return RefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(feedOpinionsProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            Icon(
-              Icons.chat_bubble_outline,
-              size: 48,
-              color: Theme.of(context).brightness == Brightness.dark
-                  ? AppColors.darkSecondaryText
-                  : AppColors.lightSecondaryText,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'No opinions yet',
-              style: AppTypography.body(
-                color: Theme.of(context).brightness == Brightness.dark
-                    ? AppColors.darkSecondaryText
-                    : AppColors.lightSecondaryText,
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.chat_bubble_outline,
+                      size: 48,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.darkSecondaryText
+                          : AppColors.lightSecondaryText,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No opinions yet',
+                      style: AppTypography.body(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkSecondaryText
+                            : AppColors.lightSecondaryText,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -108,17 +122,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: opinions.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final opinion = opinions[index];
-        return OpinionCard(
-          opinion: opinion,
-          onTap: () => context.push('/opinion/${opinion.id}'),
-        );
+    return RefreshIndicator(
+      onRefresh: () async {
+        ref.invalidate(feedOpinionsProvider);
+        await Future.delayed(const Duration(milliseconds: 500));
       },
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: opinions.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final opinion = opinions[index];
+          return OpinionCard(
+            opinion: opinion,
+            onTap: () => context.push('/opinion/${opinion.id}'),
+          );
+        },
+      ),
     );
   }
 }
