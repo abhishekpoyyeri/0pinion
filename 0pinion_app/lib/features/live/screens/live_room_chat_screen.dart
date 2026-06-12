@@ -47,6 +47,12 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              room.title,
+              style: AppTypography.bodyMedium(color: primaryText),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             Text(title, style: AppTypography.bodyMedium(color: primaryText)),
             Row(
               children: [
@@ -95,10 +101,13 @@ class _LiveRoomChatScreenState extends State<LiveRoomChatScreen> {
                           children: [
                             Row(
                               children: [
-                                Text(
-                                  '@${msg.senderUsername}',
-                                  style: AppTypography.captionMedium(
-                                    color: isMe ? primaryText : secondaryText,
+                                Flexible(
+                                  child: Text(
+                                    '@${msg.senderUsername}',
+                                    style: AppTypography.captionMedium(
+                                      color: isMe ? primaryText : secondaryText,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                                 const SizedBox(width: 8),

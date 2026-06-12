@@ -44,65 +44,72 @@ class _ReportScreenState extends State<ReportScreen> {
         ),
         title: Text('Report', style: AppTypography.h3(color: primaryText)),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Why are you reporting this ${widget.contentType}?',
-              style: AppTypography.body(color: primaryText),
-            ),
-            const SizedBox(height: 24),
-
-            // Reason list
-            ...(_reasons.map((reason) {
-              final isSelected = _selectedReason == reason;
-              return GestureDetector(
-                onTap: () => setState(() => _selectedReason = reason),
-                child: Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: isSelected ? primaryText : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: isSelected ? primaryText : borderColor,
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Why are you reporting this ${widget.contentType}?',
+                      style: AppTypography.body(color: primaryText),
                     ),
-                  ),
-                  child: Text(
-                    reason,
-                    style: AppTypography.bodyMedium(
-                      color: isSelected
-                          ? (isDark ? AppColors.black : AppColors.white)
-                          : primaryText,
-                    ),
-                  ),
-                ),
-              );
-            })),
+                    const SizedBox(height: 24),
 
-            const Spacer(),
-
-            PrimaryButton(
-              label: 'Submit Report',
-              onPressed: _selectedReason != null
-                  ? () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Report submitted. Thank you.',
-                            style: AppTypography.caption(),
+                    // Reason list
+                    ...(_reasons.map((reason) {
+                      final isSelected = _selectedReason == reason;
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedReason = reason),
+                        child: Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: isSelected ? primaryText : Colors.transparent,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected ? primaryText : borderColor,
+                            ),
                           ),
-                          backgroundColor: primaryText,
+                          child: Text(
+                            reason,
+                            style: AppTypography.bodyMedium(
+                              color: isSelected
+                                  ? (isDark ? AppColors.black : AppColors.white)
+                                  : primaryText,
+                            ),
+                          ),
                         ),
                       );
-                      context.pop();
-                    }
-                  : null,
+                    })),
+                  ],
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: PrimaryButton(
+                label: 'Submit Report',
+                onPressed: _selectedReason != null
+                    ? () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Report submitted. Thank you.',
+                              style: AppTypography.caption(),
+                            ),
+                            backgroundColor: primaryText,
+                          ),
+                        );
+                        context.pop();
+                      }
+                    : null,
+              ),
+            ),
           ],
         ),
       ),

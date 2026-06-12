@@ -82,11 +82,14 @@ class OpinionCard extends StatelessWidget {
                 if (!opinion.isAnonymous)
                   AvatarWidget(seed: opinion.authorId.hashCode, size: 24),
                 if (!opinion.isAnonymous) const SizedBox(width: 8),
-                Text(
-                  opinion.isAnonymous ? 'Anonymous' : '@${opinion.authorUsername}',
-                  style: AppTypography.captionMedium(color: secondaryText),
+                Expanded(
+                  child: Text(
+                    opinion.isAnonymous ? 'Anonymous' : '@${opinion.authorUsername}',
+                    style: AppTypography.captionMedium(color: secondaryText),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 16),
                 Text(
                   _timeAgo(opinion.createdAt),
                   style: AppTypography.caption(color: secondaryText),
@@ -119,12 +122,12 @@ class OpinionCard extends StatelessWidget {
             // Debate stats
             Divider(color: borderColor),
             const SizedBox(height: 8),
-            Row(
+            Wrap(
+              spacing: 16,
+              runSpacing: 4,
               children: [
                 _StatChip(label: 'Support', count: opinion.supportCount, color: primaryText),
-                const SizedBox(width: 16),
                 _StatChip(label: 'Oppose', count: opinion.opposeCount, color: primaryText),
-                const SizedBox(width: 16),
                 _StatChip(label: 'Question', count: opinion.questionCount, color: primaryText),
               ],
             ),
