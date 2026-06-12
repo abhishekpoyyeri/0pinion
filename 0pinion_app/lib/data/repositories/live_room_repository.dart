@@ -17,11 +17,20 @@ class LiveRoomRepository {
   LiveRoomRepository(this._supabase);
 
   Future<List<Map<String, dynamic>>> fetchRooms() async {
-    final res = await _supabase
-        .from('live_rooms')
-        .select('*, profiles!live_rooms_host_id_fkey(username)')
-        .order('created_at', ascending: false);
-    return List<Map<String, dynamic>>.from(res);
+    try {
+      final res = await _supabase
+          .from('live_rooms')
+          .select('*, profiles(username)')
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(res);
+    } catch (_) {
+      // Fallback: fetch without profile join
+      final res = await _supabase
+          .from('live_rooms')
+          .select()
+          .order('created_at', ascending: false);
+      return List<Map<String, dynamic>>.from(res);
+    }
   }
 
   Future<void> createRoom({
