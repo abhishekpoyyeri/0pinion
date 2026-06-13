@@ -60,6 +60,7 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
         ],
       ),
       body: opinionsAsync.when(
+        skipLoadingOnRefresh: true,
         loading: () => const Center(child: VideoLoader()),
         error: (e, st) => Center(child: Text('Error: $e')),
         data: (opinions) {

@@ -69,6 +69,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
           // Community list
           Expanded(
             child: communitiesAsync.when(
+              skipLoadingOnRefresh: true,
               loading: () => const Center(child: VideoLoader()),
               error: (err, _) => VideoRefreshIndicator(
                 onRefresh: () async {

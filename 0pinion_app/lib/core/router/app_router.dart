@@ -5,20 +5,15 @@ import '../../features/auth/screens/sign_up_screen.dart';
 import '../../features/auth/screens/username_setup_screen.dart';
 import '../../features/onboarding/screens/select_zeroes_screen.dart';
 import '../../features/onboarding/screens/welcome_screen.dart';
-import '../../features/feed/screens/home_screen.dart';
-import '../../features/search/screens/search_screen.dart';
-import '../../features/opinion/screens/create_opinion_screen.dart';
-import '../../features/community/screens/communities_screen.dart';
 import '../../features/community/screens/community_detail_screen.dart';
 import '../../features/community/screens/create_community_screen.dart';
 import '../../features/community/screens/create_community_post_screen.dart';
-import '../../features/profile/screens/profile_screen.dart';
 import '../../features/opinion/screens/opinion_detail_screen.dart';
 import '../../features/opinion/screens/write_argument_screen.dart';
 import '../../features/search/screens/browse_zeroes_screen.dart';
 import '../../features/live/screens/live_room_chat_screen.dart';
 import '../../features/report/screens/report_screen.dart';
-import '../widgets/bottom_nav.dart';
+import '../widgets/main_screen.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/supabase_provider.dart';
@@ -27,7 +22,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   // Define keys inside the provider so they are recreated if the router ever rebuilds,
   // preventing the "Multiple widgets used the same GlobalKey" crash.
   final rootNavigatorKey = GlobalKey<NavigatorState>();
-  final shellNavigatorKey = GlobalKey<NavigatorState>();
 
   // Only rebuild the router when the user actually logs in or out, 
   // NOT on every minor background token refresh.
@@ -77,42 +71,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const WelcomeScreen(),
       ),
 
-      // ─── Main App Shell (with bottom navigation) ───
-      ShellRoute(
-        navigatorKey: shellNavigatorKey,
-        builder: (context, state, child) => BottomNavShell(child: child),
-        routes: [
-          GoRoute(
-            path: '/home',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: HomeScreen(),
-            ),
-          ),
-          GoRoute(
-            path: '/search',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: SearchScreen(),
-            ),
-          ),
-          GoRoute(
-            path: '/create',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: CreateOpinionScreen(),
-            ),
-          ),
-          GoRoute(
-            path: '/communities',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: CommunitiesScreen(),
-            ),
-          ),
-          GoRoute(
-            path: '/profile',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ProfileScreen(),
-            ),
-          ),
-        ],
+      // ─── Main App Shell (with bottom navigation and PageView) ───
+      GoRoute(
+        path: '/home',
+        builder: (context, state) => const MainScreen(),
       ),
 
       // ─── Detail Screens (push on top of shell) ───

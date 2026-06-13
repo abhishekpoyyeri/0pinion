@@ -1,5 +1,6 @@
 import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
 import 'package:opinion_app/core/widgets/video_loader.dart';
+import 'package:opinion_app/core/widgets/keep_alive_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -108,9 +109,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         body: TabBarView(
           controller: _tabController,
           children: [
-            _buildTab(opinionsAsync, (opinions) => opinions, 'for_you'),
-            _buildTab(opinionsAsync, (opinions) => opinions.where((o) => o.isCooking).toList(), 'cooking'),
-            _buildLiveRoomsTab(),
+            KeepAliveWrapper(child: _buildTab(opinionsAsync, (opinions) => opinions, 'for_you')),
+            KeepAliveWrapper(child: _buildTab(opinionsAsync, (opinions) => opinions.where((o) => o.isCooking).toList(), 'cooking')),
+            KeepAliveWrapper(child: _buildLiveRoomsTab()),
           ],
         ),
       ),
@@ -119,6 +120,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Widget _buildTab(AsyncValue opinionsAsync, List Function(List) filter, String tabKey) {
     return opinionsAsync.when(
+      skipLoadingOnRefresh: true,
       data: (opinions) => _buildFeed(filter(opinions as List), tabKey),
       loading: () => const Center(child: VideoLoader()),
       error: (err, stack) => VideoRefreshIndicator(
@@ -220,7 +222,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       child: ListView.separated(
         key: PageStorageKey<String>('${tabKey}_data'),
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         itemCount: opinions.length,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
@@ -244,6 +246,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final roomsAsync = ref.watch(liveRoomsProvider);
 
     return roomsAsync.when(
+      skipLoadingOnRefresh: true,
       loading: () => const Center(child: VideoLoader()),
       error: (err, _) => VideoRefreshIndicator(
         onRefresh: () async {
@@ -305,7 +308,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           child: ListView.separated(
             key: const PageStorageKey<String>('live_rooms_data'),
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             itemCount: rooms.length,
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
@@ -369,7 +372,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               child: Text(
                                 isClosed ? 'CLOSED' : 'LIVE',
                                 style: AppTypography.label(
-                                  color: isClosed ? Colors.white : Colors.black,
+                                  color: isClosed ? AppColors.white : AppColors.black,
                                 ),
                               ),
                             ),
