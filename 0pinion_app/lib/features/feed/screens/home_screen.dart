@@ -7,6 +7,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/opinion_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/opinion_provider.dart';
+import '../../../data/repositories/live_room_repository.dart';
 
 /// Home screen — For You / Cooking / Latest tabs with opinion feed
 class HomeScreen extends ConsumerStatefulWidget {
@@ -59,7 +60,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       tabs: const [
                         Tab(text: 'For You'),
                         Tab(text: 'Cooking'),
-                        Tab(text: 'Latest'),
+                        Tab(text: 'Live'),
                       ],
                     ),
                     Divider(height: 1, color: borderColor),
@@ -107,18 +108,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         body: TabBarView(
           controller: _tabController,
           children: [
-            _buildTab(opinionsAsync, (opinions) => opinions),
-            _buildTab(opinionsAsync, (opinions) => opinions.where((o) => o.isCooking).toList()),
-            _buildTab(opinionsAsync, (opinions) => opinions.toList()), 
+            _buildTab(opinionsAsync, (opinions) => opinions, 'for_you'),
+            _buildCookingTab(),
+            _buildLiveRoomsTab(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTab(AsyncValue opinionsAsync, List Function(List) filter) {
+  Widget _buildTab(AsyncValue opinionsAsync, List Function(List) filter, String tabKey) {
     return opinionsAsync.when(
-      data: (opinions) => _buildFeed(filter(opinions as List)),
+      data: (opinions) => _buildFeed(filter(opinions as List), tabKey),
       loading: () => const Center(child: VideoLoader()),
       error: (err, stack) => VideoRefreshIndicator(
         onRefresh: () async {
@@ -126,6 +127,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           await Future.delayed(const Duration(milliseconds: 500));
         },
         child: ListView(
+          key: PageStorageKey<String>('${tabKey}_error'),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             SizedBox(
@@ -168,7 +170,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
-  Widget _buildFeed(List opinions) {
+  Widget _buildCookingTab() {
+    final cookingAsync = ref.watch(cookingOpinionsProvider);
+    return cookingAsync.when(
+      data: (opinions) => _buildFeed(opinions, 'cooking'),
+      loading: () => const Center(child: VideoLoader()),
+      error: (err, stack) => VideoRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(feedOpinionsProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: ListView(
+          key: const PageStorageKey<String>('cooking_error'),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: Center(
+                child: Text(
+                  'Could not load cooking opinions',
+                  style: AppTypography.body(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkSecondaryText
+                        : AppColors.lightSecondaryText,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeed(List opinions, String tabKey) {
     if (opinions.isEmpty) {
       return VideoRefreshIndicator(
         onRefresh: () async {
@@ -176,6 +211,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           await Future.delayed(const Duration(milliseconds: 500));
         },
         child: ListView(
+          key: PageStorageKey<String>('${tabKey}_empty'),
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             SizedBox(
@@ -215,6 +251,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         await Future.delayed(const Duration(milliseconds: 500));
       },
       child: ListView.separated(
+        key: PageStorageKey<String>('${tabKey}_data'),
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         itemCount: opinions.length,
@@ -227,6 +264,239 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           );
         },
       ),
+    );
+  }
+
+  Widget _buildLiveRoomsTab() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
+    final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+
+    final roomsAsync = ref.watch(liveRoomsProvider);
+
+    return roomsAsync.when(
+      loading: () => const Center(child: VideoLoader()),
+      error: (err, _) => VideoRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(liveRoomsProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: ListView(
+          key: const PageStorageKey<String>('live_rooms_error'),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: Center(
+                child: Text('Error loading rooms: $err',
+                    style: AppTypography.caption(color: secondaryText)),
+              ),
+            ),
+          ],
+        ),
+      ),
+      data: (rooms) {
+        if (rooms.isEmpty) {
+          return VideoRefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(liveRoomsProvider);
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: ListView(
+              key: const PageStorageKey<String>('live_rooms_empty'),
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.forum_outlined, size: 48, color: secondaryText),
+                        const SizedBox(height: 16),
+                        Text('No live rooms yet',
+                            style: AppTypography.bodySemiBold(color: primaryText)),
+                        const SizedBox(height: 8),
+                        Text('Create one from the + tab!',
+                            style: AppTypography.caption(color: secondaryText)),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return VideoRefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(liveRoomsProvider);
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: ListView.separated(
+            key: const PageStorageKey<String>('live_rooms_data'),
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            itemCount: rooms.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final room = rooms[index];
+              final roomId = room['id'] as String;
+              final title = room['title'] as String? ?? 'Untitled';
+              final topic = room['topic'] as String? ?? '';
+              final participantCount = room['participant_count'] as int? ?? 1;
+
+              final profileData = room['profiles'];
+              final hostUsername = profileData != null && profileData is Map
+                  ? (profileData['username'] as String? ?? 'unknown')
+                  : 'unknown';
+
+              final status = room['status'] as String? ?? 'active';
+              final isClosed = status == 'closed';
+              final conclusion = room['conclusion'] as String?;
+              
+              String timeInfo = '';
+              if (!isClosed) {
+                final createdAtStr = room['created_at'] as String?;
+                final durationMins = room['duration_minutes'] as int? ?? 10;
+                if (createdAtStr != null) {
+                  final createdAt = DateTime.tryParse(createdAtStr) ?? DateTime.now();
+                  final expiresAt = createdAt.add(Duration(minutes: durationMins));
+                  final remaining = expiresAt.difference(DateTime.now());
+                  if (remaining.isNegative) {
+                    timeInfo = '0m left';
+                  } else {
+                    final mins = remaining.inMinutes;
+                    timeInfo = '${mins}m left';
+                  }
+                }
+              }
+
+              return GestureDetector(
+                onTap: () => context.push('/live/$roomId'),
+                child: Opacity(
+                  opacity: isClosed ? 0.6 : 1.0,
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Badge + title
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: isClosed ? Colors.black : Colors.white,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                              ),
+                              child: Text(
+                                isClosed ? 'CLOSED' : 'LIVE',
+                                style: AppTypography.label(
+                                  color: isClosed ? Colors.white : Colors.black,
+                                ),
+                              ),
+                            ),
+                            if (!isClosed && timeInfo.isNotEmpty) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: borderColor),
+                                ),
+                                child: Text(
+                                  timeInfo,
+                                  style: AppTypography.label(color: secondaryText),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: AppTypography.bodySemiBold(
+                                    color: primaryText),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        // Show conclusion for closed rooms, topic for active
+                        if (isClosed && conclusion != null && conclusion.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.gavel, size: 14, color: secondaryText),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  conclusion,
+                                  style: AppTypography.caption(color: secondaryText),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else if (topic.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            topic,
+                            style: AppTypography.caption(color: secondaryText),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                        const SizedBox(height: 12),
+
+                        // Host and participants
+                        Row(
+                          children: [
+                            Icon(Icons.person_outline,
+                                size: 16, color: secondaryText),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                'Hosted by @$hostUsername',
+                                style: AppTypography.caption(
+                                    color: secondaryText),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Icon(Icons.group_outlined,
+                                size: 16, color: secondaryText),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$participantCount participants',
+                              style: AppTypography.caption(
+                                  color: secondaryText),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

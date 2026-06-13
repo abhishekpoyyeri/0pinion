@@ -86,7 +86,7 @@ This file tracks the implementation progress of **0pinion**, a monochrome, text-
 - [ ] PostgreSQL Triggers & Functions:
   - [ ] Trigger to update reputation scores based on votes/arguments
   - [ ] Trigger to increment/decrement `opinions_count` on Zeroes
-  - [ ] Function to compute "Cooking" feed trending score
+  - [x] Function to compute "Cooking" feed trending score
 
 ---
 
@@ -118,7 +118,7 @@ This file tracks the implementation progress of **0pinion**, a monochrome, text-
   - [ ] Create/Edit/Delete opinions with Supabase
   - [ ] Post arguments to Support/Oppose/Question zones
   - [ ] Join / Leave Zeroes (database + local cache)
-  - [ ] Cooking feed algorithm (activity-based momentum)
+  - [x] Cooking feed algorithm (activity-based momentum)
 
 ---
 
@@ -174,4 +174,12 @@ This file tracks the implementation progress of **0pinion**, a monochrome, text-
   - Updated layout (June 13 Follow-up): Removed text labels and decreased the dock height to 60.0 with a corner radius of 30.0 for a more minimal, sleeker icon-only appearance.
   - Clean implementation without altering go_router routes, providers, or screen logic.
 
-
+### June 13, 2026 - Critical Bug Fixes & UI Polish
+- **Changes**: Resolved several UI/UX and runtime framework bugs reported by the team.
+- **Details**:
+  - **Launcher Icons**: Configured `flutter_launcher_icons` with a padded, adaptive icon canvas to prevent the logo from looking improperly zoomed-in on Android and iOS.
+  - **Scrollable Error States**: Replaced static error texts with `VideoRefreshIndicator` wrappers across Home, Live Rooms, and Profile screens. This allows users to pull-to-refresh if the connection drops or the session expires without restarting the app.
+  - **State Caching**: Invalidated `userProfileDetailsProvider` immediately after `UsernameSetupScreen` completes so the Profile tab doesn't show a stale cached email fallback on first load.
+  - **GoRouter Rebuilds**: Fixed a fatal `Multiple widgets used the same GlobalKey` crash by moving Navigator keys inside the `appRouterProvider` scope and utilizing `.select()` to prevent the entire navigation stack from unnecessarily rebuilding during background token refreshes.
+  - **Layout Assertions**: Fixed a fatal `debugNeedsLayout: is not true` layout assertion crash by assigning unique `PageStorageKey`s to every `ListView` contained inside the `HomeScreen`'s `TabBarView` `NestedScrollView`.
+  - **Manifest Polish**: Enabled `android:enableOnBackInvokedCallback="true"` in the Android manifest to support native predictive back gestures and clear build warnings.

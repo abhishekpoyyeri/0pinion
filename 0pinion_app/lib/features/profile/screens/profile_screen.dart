@@ -77,14 +77,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        profile?['display_name'] as String? ?? user.email ?? 'Unknown User',
+                        (profileAsync.isLoading && profile == null)
+                            ? 'Loading...'
+                            : profile?['display_name'] as String? ?? user.email ?? 'Unknown User',
                         style: AppTypography.h3(color: primaryText),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        profile?['username'] != null 
-                            ? '@${profile!['username']}' 
-                            : '@user_${user.id.substring(0, 4)}',
+                        (profileAsync.isLoading && profile == null)
+                            ? '@...'
+                            : profile?['username'] != null 
+                                ? '@${profile!['username']}' 
+                                : '@user_${user.id.substring(0, 4)}',
                         style: AppTypography.body(color: secondaryText),
                       ),
                       const SizedBox(height: 20),

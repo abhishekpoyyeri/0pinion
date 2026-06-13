@@ -71,7 +71,7 @@ class CustomNavigationDock extends StatelessWidget {
                     ),
                     _buildNavItem(
                       index: 3,
-                      icon: Icons.chat_bubble_outline,
+                      icon: Icons.groups_outlined,
                     ),
                     _buildNavItem(
                       index: 4,
