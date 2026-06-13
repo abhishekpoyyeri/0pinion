@@ -310,8 +310,8 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.black,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
                       onPressed: () async {
@@ -339,7 +339,7 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
                       },
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text('Close Room', style: AppTypography.captionMedium(color: Colors.white)),
+                        child: Text('Close Room', style: AppTypography.captionMedium(color: Colors.black)),
                       ),
                     ),
                   ),
@@ -397,7 +397,8 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: _roomStatus == 'active' ? Colors.green : Colors.red,
+                    color: _roomStatus == 'active' ? Colors.white : Colors.black,
+                    border: Border.all(color: Colors.grey.withOpacity(0.5)),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -415,7 +416,7 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
         actions: [
           if (_isHost && _roomStatus == 'active')
             IconButton(
-              icon: const Icon(Icons.cancel_outlined, color: Colors.redAccent),
+              icon: const Icon(Icons.cancel_outlined, color: Colors.white),
               tooltip: 'Close Room',
               onPressed: _showCloseRoomDialog,
             ),

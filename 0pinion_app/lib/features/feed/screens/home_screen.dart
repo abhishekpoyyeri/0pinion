@@ -320,83 +320,143 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ? (profileData['username'] as String? ?? 'unknown')
                   : 'unknown';
 
+              final status = room['status'] as String? ?? 'active';
+              final isClosed = status == 'closed';
+              final conclusion = room['conclusion'] as String?;
+              
+              String timeInfo = '';
+              if (!isClosed) {
+                final createdAtStr = room['created_at'] as String?;
+                final durationMins = room['duration_minutes'] as int? ?? 10;
+                if (createdAtStr != null) {
+                  final createdAt = DateTime.tryParse(createdAtStr) ?? DateTime.now();
+                  final expiresAt = createdAt.add(Duration(minutes: durationMins));
+                  final remaining = expiresAt.difference(DateTime.now());
+                  if (remaining.isNegative) {
+                    timeInfo = '0m left';
+                  } else {
+                    final mins = remaining.inMinutes;
+                    timeInfo = '${mins}m left';
+                  }
+                }
+              }
+
               return GestureDetector(
                 onTap: () => context.push('/live/$roomId'),
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: surfaceColor,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: borderColor),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: primaryText,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'LIVE',
-                              style: AppTypography.label(
-                                color: isDark
-                                    ? AppColors.black
-                                    : AppColors.white,
+                child: Opacity(
+                  opacity: isClosed ? 0.6 : 1.0,
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: surfaceColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: borderColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Badge + title
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: isClosed ? Colors.black : Colors.white,
+                                borderRadius: BorderRadius.circular(4),
+                                border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                              ),
+                              child: Text(
+                                isClosed ? 'CLOSED' : 'LIVE',
+                                style: AppTypography.label(
+                                  color: isClosed ? Colors.white : Colors.black,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              title,
-                              style: AppTypography.bodySemiBold(
-                                  color: primaryText),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            if (!isClosed && timeInfo.isNotEmpty) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: borderColor),
+                                ),
+                                child: Text(
+                                  timeInfo,
+                                  style: AppTypography.label(color: secondaryText),
+                                ),
+                              ),
+                            ],
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: AppTypography.bodySemiBold(
+                                    color: primaryText),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
+                          ],
+                        ),
+                        
+                        // Show conclusion for closed rooms, topic for active
+                        if (isClosed && conclusion != null && conclusion.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(Icons.gavel, size: 14, color: secondaryText),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  conclusion,
+                                  style: AppTypography.caption(color: secondaryText),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ] else if (topic.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            topic,
+                            style: AppTypography.caption(color: secondaryText),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
-                      ),
-                      if (topic.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          topic,
-                          style: AppTypography.caption(color: secondaryText),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          Icon(Icons.person_outline,
-                              size: 16, color: secondaryText),
-                          const SizedBox(width: 4),
-                          Expanded(
-                            child: Text(
-                              'Hosted by @$hostUsername',
+                        const SizedBox(height: 12),
+
+                        // Host and participants
+                        Row(
+                          children: [
+                            Icon(Icons.person_outline,
+                                size: 16, color: secondaryText),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                'Hosted by @$hostUsername',
+                                style: AppTypography.caption(
+                                    color: secondaryText),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Icon(Icons.group_outlined,
+                                size: 16, color: secondaryText),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$participantCount participants',
                               style: AppTypography.caption(
                                   color: secondaryText),
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Icon(Icons.group_outlined,
-                              size: 16, color: secondaryText),
-                          const SizedBox(width: 4),
-                          Text(
-                            '$participantCount participants',
-                            style: AppTypography.caption(
-                                color: secondaryText),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
