@@ -8,7 +8,10 @@ import '../../features/onboarding/screens/welcome_screen.dart';
 import '../../features/feed/screens/home_screen.dart';
 import '../../features/search/screens/search_screen.dart';
 import '../../features/opinion/screens/create_opinion_screen.dart';
-import '../../features/live/screens/live_rooms_screen.dart';
+import '../../features/community/screens/communities_screen.dart';
+import '../../features/community/screens/community_detail_screen.dart';
+import '../../features/community/screens/create_community_screen.dart';
+import '../../features/community/screens/create_community_post_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/opinion/screens/opinion_detail_screen.dart';
 import '../../features/opinion/screens/write_argument_screen.dart';
@@ -98,9 +101,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
-            path: '/live',
+            path: '/communities',
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: LiveRoomsScreen(),
+              child: CommunitiesScreen(),
             ),
           ),
           GoRoute(
@@ -145,6 +148,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => ReportScreen(
           contentType: state.pathParameters['contentType']!,
           contentId: state.pathParameters['contentId']!,
+        ),
+      ),
+
+      // ─── Community Detail Routes ───
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/community/create',
+        builder: (context, state) => const CreateCommunityScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/community/:id',
+        builder: (context, state) => CommunityDetailScreen(
+          communityId: state.pathParameters['id']!,
+        ),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/community/:id/post',
+        builder: (context, state) => CreateCommunityPostScreen(
+          communityId: state.pathParameters['id']!,
         ),
       ),
     ],

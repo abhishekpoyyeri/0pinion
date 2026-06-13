@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'custom_navigation_dock.dart';
 
-/// Bottom navigation shell — 5 tabs: Home, Search, Create, Live, Profile
+/// Bottom navigation shell — 5 tabs: Home, Search, Create, Communities, Profile
 class BottomNavShell extends StatelessWidget {
   final Widget child;
 
@@ -13,7 +13,7 @@ class BottomNavShell extends StatelessWidget {
     if (location.startsWith('/home')) return 0;
     if (location.startsWith('/search')) return 1;
     if (location.startsWith('/create')) return 2;
-    if (location.startsWith('/live')) return 3;
+    if (location.startsWith('/communities')) return 3;
     if (location.startsWith('/profile')) return 4;
     return 0;
   }
@@ -30,7 +30,7 @@ class BottomNavShell extends StatelessWidget {
         context.go('/create');
         break;
       case 3:
-        context.go('/live');
+        context.go('/communities');
         break;
       case 4:
         context.go('/profile');
@@ -52,4 +52,3 @@ class BottomNavShell extends StatelessWidget {
     );
   }
 }
-
