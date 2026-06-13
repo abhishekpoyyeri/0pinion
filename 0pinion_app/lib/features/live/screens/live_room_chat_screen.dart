@@ -7,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/providers/supabase_provider.dart';
+import '../../../core/widgets/video_loader.dart';
 import '../../../data/repositories/live_room_repository.dart';
 
 /// Live Room Chat screen — ephemeral real-time debate via Supabase Broadcast
@@ -430,7 +431,7 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
           ),
           title: Text('Loading...', style: AppTypography.bodyMedium(color: primaryText)),
         ),
-        body: const Center(child: CircularProgressIndicator.adaptive()),
+        body: const Center(child: VideoLoader()),
       );
     }
 
