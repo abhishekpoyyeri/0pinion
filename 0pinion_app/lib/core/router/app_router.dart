@@ -20,15 +20,18 @@ import '../widgets/bottom_nav.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/supabase_provider.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
-final _shellNavigatorKey = GlobalKey<NavigatorState>();
-
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authStateProvider);
-  final isAuthenticated = authState.value?.session != null;
+  // Define keys inside the provider so they are recreated if the router ever rebuilds,
+  // preventing the "Multiple widgets used the same GlobalKey" crash.
+  final rootNavigatorKey = GlobalKey<NavigatorState>();
+  final shellNavigatorKey = GlobalKey<NavigatorState>();
+
+  // Only rebuild the router when the user actually logs in or out, 
+  // NOT on every minor background token refresh.
+  final isAuthenticated = ref.watch(authStateProvider.select((state) => state.value?.session != null));
 
   return GoRouter(
-    navigatorKey: _rootNavigatorKey,
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/splash',
     redirect: (context, state) {
       final isGoingToAuth = state.matchedLocation == '/splash' || 
@@ -73,7 +76,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // ─── Main App Shell (with bottom navigation) ───
       ShellRoute(
-        navigatorKey: _shellNavigatorKey,
+        navigatorKey: shellNavigatorKey,
         builder: (context, state, child) => BottomNavShell(child: child),
         routes: [
           GoRoute(
@@ -111,33 +114,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // ─── Detail Screens (push on top of shell) ───
       GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         path: '/opinion/:id',
         builder: (context, state) => OpinionDetailScreen(
           opinionId: state.pathParameters['id']!,
         ),
       ),
       GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         path: '/argument/:opinionId',
         builder: (context, state) => WriteArgumentScreen(
           opinionId: state.pathParameters['opinionId']!,
         ),
       ),
       GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         path: '/zeroes',
         builder: (context, state) => const BrowseZeroesScreen(),
       ),
       GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         path: '/live/:roomId',
         builder: (context, state) => LiveRoomChatScreen(
           roomId: state.pathParameters['roomId']!,
         ),
       ),
       GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
+        parentNavigatorKey: rootNavigatorKey,
         path: '/report/:contentType/:contentId',
         builder: (context, state) => ReportScreen(
           contentType: state.pathParameters['contentType']!,

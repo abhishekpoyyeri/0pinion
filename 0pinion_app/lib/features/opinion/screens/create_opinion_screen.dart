@@ -9,6 +9,7 @@ import '../../../core/providers/supabase_provider.dart';
 import '../../../data/repositories/opinion_repository.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/live_room_repository.dart';
+import '../../../core/utils/error_handler.dart';
 
 /// Screen to create a new opinion or a live room
 class CreateOpinionScreen extends ConsumerStatefulWidget {
@@ -273,7 +274,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
 
             // Submit
             _isOpinionLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: VideoLoader())
                 : PrimaryButton(
                     label: 'Post Opinion',
                     onPressed: _submitOpinion,
@@ -328,7 +329,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
 
             // Submit
             _isRoomLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: VideoLoader())
                 : PrimaryButton(
                     label: 'Create Live Room',
                     onPressed: _submitLiveRoom,
