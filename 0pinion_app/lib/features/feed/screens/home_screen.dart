@@ -109,9 +109,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         body: TabBarView(
           controller: _tabController,
           children: [
-            KeepAliveWrapper(child: _buildTab(opinionsAsync, (opinions) => opinions, 'for_you')),
-            KeepAliveWrapper(child: _buildCookingTab()),
-            KeepAliveWrapper(child: _buildLiveRoomsTab()),
+            KeepAliveWrapper(key: const ValueKey('for_you'), child: _buildTab(opinionsAsync, (opinions) => opinions, 'for_you')),
+            KeepAliveWrapper(key: const ValueKey('cooking'), child: _buildCookingTab()),
+            KeepAliveWrapper(key: const ValueKey('live_rooms'), child: _buildLiveRoomsTab()),
           ],
         ),
       ),
