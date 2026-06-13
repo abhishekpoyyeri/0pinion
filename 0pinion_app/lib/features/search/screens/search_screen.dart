@@ -24,6 +24,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   String _query = '';
   bool _isLoading = false;
 
+  // Search History
+  List<Map<String, dynamic>> _searchHistory = [];
+  bool _isLoadingHistory = false;
   // Results
   List<Opinion> _opinionResults = [];
   List<Map<String, dynamic>> _userResults = [];
@@ -31,6 +34,78 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   // What kind of search is active
   String _searchMode = 'all'; // 'all', 'users', 'zeroes'
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    final supabase = ref.read(supabaseClientProvider);
+    if (supabase.auth.currentUser == null) return;
+    
+    setState(() => _isLoadingHistory = true);
+    try {
+      final res = await supabase
+          .from('search_history')
+          .select()
+          .order('created_at', ascending: false)
+          .limit(20);
+      setState(() {
+        _searchHistory = List<Map<String, dynamic>>.from(res);
+      });
+    } catch (e) {
+      debugPrint('Load history error: $e');
+    } finally {
+      if (mounted) setState(() => _isLoadingHistory = false);
+    }
+  }
+
+  Future<void> _addHistory(String query) async {
+    final supabase = ref.read(supabaseClientProvider);
+    if (supabase.auth.currentUser == null) return;
+    if (query.trim().isEmpty) return;
+
+    try {
+      await supabase.from('search_history').insert({
+        'user_id': supabase.auth.currentUser!.id,
+        'query': query.trim(),
+      });
+      _loadHistory();
+    } catch (e) {
+      debugPrint('Add history error: $e');
+    }
+  }
+
+  Future<void> _clearAllHistory() async {
+    final supabase = ref.read(supabaseClientProvider);
+    if (supabase.auth.currentUser == null) return;
+
+    try {
+      await supabase
+          .from('search_history')
+          .delete()
+          .eq('user_id', supabase.auth.currentUser!.id);
+      _loadHistory();
+    } catch (e) {
+      debugPrint('Clear all history error: $e');
+    }
+  }
+
+  Future<void> _deleteHistory(String id) async {
+    final supabase = ref.read(supabaseClientProvider);
+    
+    try {
+      await supabase
+          .from('search_history')
+          .delete()
+          .eq('id', id);
+      _loadHistory();
+    } catch (e) {
+      debugPrint('Delete history error: $e');
+    }
+  }
 
   @override
   void dispose() {
@@ -157,8 +232,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 setState(() => _query = v);
                 _performSearch(v);
               },
+              onSubmitted: (v) {
+                _addHistory(v);
+              },
               decoration: InputDecoration(
-                hintText: '@user  ·  0zero  ·  search opinions...',
+                hintText: 'Search here',
                 prefixIcon: Icon(Icons.search, color: secondaryText),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
@@ -215,6 +293,56 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   }
 
   Widget _buildEmptyState(Color secondaryText, Color primaryText) {
+    if (_isLoadingHistory) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_searchHistory.isNotEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Search History', style: AppTypography.bodySemiBold(color: primaryText)),
+                TextButton(
+                  onPressed: _clearAllHistory,
+                  child: Text('Clear All', style: AppTypography.caption(color: secondaryText)),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _searchHistory.length,
+              itemBuilder: (context, index) {
+                final history = _searchHistory[index];
+                final query = history['query'] as String;
+                final id = history['id'] as String;
+
+                return ListTile(
+                  leading: Icon(Icons.history, color: secondaryText),
+                  title: Text(query, style: AppTypography.body(color: primaryText)),
+                  trailing: IconButton(
+                    icon: Icon(Icons.close, color: secondaryText),
+                    onPressed: () => _deleteHistory(id),
+                  ),
+                  onTap: () {
+                    _searchController.text = query;
+                    setState(() => _query = query);
+                    _performSearch(query);
+                    _addHistory(query);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,

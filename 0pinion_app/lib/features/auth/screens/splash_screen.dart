@@ -128,7 +128,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     const SizedBox(height: 12),
                     SecondaryButton(
                       label: 'Login',
-                      onPressed: () => context.go('/signup'),
+                      onPressed: () => context.go('/login'),
                     ),
                   ],
 

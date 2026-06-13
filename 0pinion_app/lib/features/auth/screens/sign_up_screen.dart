@@ -10,7 +10,9 @@ import '../../../data/repositories/auth_repository.dart';
 
 /// Sign Up screen — Email/Password form + Google auth
 class SignUpScreen extends ConsumerStatefulWidget {
-  const SignUpScreen({super.key});
+  final bool isLogin;
+  
+  const SignUpScreen({super.key, this.isLogin = false});
 
   @override
   ConsumerState<SignUpScreen> createState() => _SignUpScreenState();
@@ -21,7 +23,13 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
-  bool _isLogin = false; // Toggle between Login and Sign Up
+  late bool _isLogin; // Toggle between Login and Sign Up
+
+  @override
+  void initState() {
+    super.initState();
+    _isLogin = widget.isLogin;
+  }
 
   @override
   void dispose() {
