@@ -120,7 +120,51 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return opinionsAsync.when(
       data: (opinions) => _buildFeed(filter(opinions as List)),
       loading: () => const Center(child: VideoLoader()),
-      error: (err, stack) => Center(child: Text('Error: $err')),
+      error: (err, stack) => VideoRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(feedOpinionsProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.wifi_off_outlined, size: 48, color: Theme.of(context).colorScheme.error),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Connection lost or session expired',
+                        style: AppTypography.bodySemiBold(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkPrimaryText
+                              : AppColors.lightPrimaryText,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Pull down to refresh and reconnect',
+                        style: AppTypography.caption(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.darkSecondaryText
+                              : AppColors.lightSecondaryText,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

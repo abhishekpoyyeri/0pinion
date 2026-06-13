@@ -59,6 +59,8 @@ class _UsernameSetupScreenState extends ConsumerState<UsernameSetupScreen> {
         displayName: displayName,
         avatarSeed: _avatarSeed,
       );
+      ref.invalidate(userProfileDetailsProvider);
+      ref.invalidate(profileStatsProvider);
       if (mounted) context.go('/select-zeroes');
     } catch (e) {
       if (mounted) {

@@ -1,4 +1,5 @@
 import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
+import 'package:opinion_app/core/widgets/video_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -38,10 +39,51 @@ class LiveRoomsScreen extends ConsumerWidget {
           Divider(height: 1, color: borderColor),
           Expanded(
             child: roomsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(
-                child: Text('Error loading rooms: $err',
-                    style: AppTypography.caption(color: secondaryText)),
+              loading: () => const Center(child: VideoLoader()),
+              error: (err, _) => VideoRefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(liveRoomsProvider);
+                  await Future.delayed(const Duration(milliseconds: 500));
+                },
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  children: [
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.5,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.wifi_off_outlined, size: 48, color: Theme.of(context).colorScheme.error),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Connection lost or session expired',
+                                style: AppTypography.bodySemiBold(
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? AppColors.darkPrimaryText
+                                      : AppColors.lightPrimaryText,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Pull down to refresh and reconnect',
+                                style: AppTypography.caption(
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? AppColors.darkSecondaryText
+                                      : AppColors.lightSecondaryText,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               data: (rooms) {
                 if (rooms.isEmpty) {
@@ -65,7 +107,7 @@ class LiveRoomsScreen extends ConsumerWidget {
                   );
                 }
 
-                return RefreshIndicator(
+                return VideoRefreshIndicator(
                   onRefresh: () async {
                     // ignore: unused_result
                     ref.refresh(liveRoomsProvider);
@@ -74,7 +116,7 @@ class LiveRoomsScreen extends ConsumerWidget {
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.all(16),
                     itemCount: rooms.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (context, index) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final room = rooms[index];
                       final roomId = room['id'] as String;
