@@ -177,7 +177,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
         }
       }
 
-      await repo.createRoom(
+      final roomId = await repo.createRoom(
         title: title,
         topic: topic,
         hostId: user.id,
@@ -185,7 +185,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
       );
 
       if (mounted) {
-        context.go('/live');
+        context.go('/live/$roomId');
       }
     } catch (e) {
       if (mounted) {
@@ -252,9 +252,19 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
               decoration: InputDecoration(
                 hintText: 'What is your opinion?',
                 hintStyle: AppTypography.h2(color: secondaryText),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: primaryText, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
             ),
             const SizedBox(height: 16),
@@ -267,9 +277,19 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
               decoration: InputDecoration(
                 hintText: 'Expand on your thoughts...\n\nMention zeroes like 0technology 0politics',
                 hintStyle: AppTypography.body(color: secondaryText),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: primaryText, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
             ),
             const SizedBox(height: 16),
@@ -397,9 +417,19 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
               decoration: InputDecoration(
                 hintText: 'Live Room Title',
                 hintStyle: AppTypography.h2(color: secondaryText),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: primaryText, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
             ),
             const SizedBox(height: 16),
@@ -412,9 +442,19 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
               decoration: InputDecoration(
                 hintText: 'What is the debate topic?',
                 hintStyle: AppTypography.body(color: secondaryText),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: borderColor),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: primaryText, width: 1.5),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
             ),
             const SizedBox(height: 24),
@@ -489,6 +529,10 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide(color: borderColor),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: primaryText, width: 1.5),
                   ),
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
