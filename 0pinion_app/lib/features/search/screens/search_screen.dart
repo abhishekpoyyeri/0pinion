@@ -1,36 +1,136 @@
 import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/opinion_card.dart';
+import '../../../core/widgets/avatar_widget.dart';
+import '../../../core/providers/supabase_provider.dart';
 import '../../../data/models/opinion.dart';
 
-/// Search screen — search bar + Opinions/Zeroes/Users tabs
-class SearchScreen extends StatefulWidget {
+/// Search screen — unified search with smart prefixes
+/// @username → users, 0topic → zeroes/opinions, default → opinions
+class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
   @override
-  State<SearchScreen> createState() => _SearchScreenState();
+  ConsumerState<SearchScreen> createState() => _SearchScreenState();
 }
 
-class _SearchScreenState extends State<SearchScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _SearchScreenState extends ConsumerState<SearchScreen> {
   final _searchController = TextEditingController();
   String _query = '';
+  bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 3, vsync: this);
-  }
+  // Results
+  List<Opinion> _opinionResults = [];
+  List<Map<String, dynamic>> _userResults = [];
+  List<Map<String, dynamic>> _zeroResults = [];
+
+  // What kind of search is active
+  String _searchMode = 'all'; // 'all', 'users', 'zeroes'
 
   @override
   void dispose() {
-    _tabController.dispose();
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _performSearch(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _opinionResults = [];
+        _userResults = [];
+        _zeroResults = [];
+        _searchMode = 'all';
+      });
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    final supabase = ref.read(supabaseClientProvider);
+
+    try {
+      if (query.startsWith('@')) {
+        // ─── USER SEARCH ───
+        final username = query.substring(1).trim().toLowerCase();
+        _searchMode = 'users';
+        if (username.isEmpty) {
+          _userResults = [];
+        } else {
+          final res = await supabase
+              .from('profiles')
+              .select()
+              .ilike('username', '%$username%')
+              .limit(20);
+          _userResults = List<Map<String, dynamic>>.from(res);
+        }
+        _opinionResults = [];
+        _zeroResults = [];
+      } else if (query.startsWith('0')) {
+        // ─── ZERO SEARCH ───
+        final zeroName = query.substring(1).trim().toLowerCase();
+        _searchMode = 'zeroes';
+        if (zeroName.isEmpty) {
+          // Show all zeroes
+          final zeroRes = await supabase
+              .from('zeroes')
+              .select()
+              .order('opinions_count', ascending: false);
+          _zeroResults = List<Map<String, dynamic>>.from(zeroRes);
+          _opinionResults = [];
+        } else {
+          // Search zeroes matching name
+          final zeroRes = await supabase
+              .from('zeroes')
+              .select()
+              .ilike('name', '%$zeroName%')
+              .order('opinions_count', ascending: false);
+          _zeroResults = List<Map<String, dynamic>>.from(zeroRes);
+
+          // Also fetch opinions tagged with matching zeroes
+          if (_zeroResults.isNotEmpty) {
+            final zeroIds = _zeroResults.map((z) => z['id'] as String).toList();
+            final opRes = await supabase
+                .from('opinions')
+                .select('*, profiles(username), zeroes(name), arguments(id, type)')
+                .inFilter('zero_id', zeroIds)
+                .order('created_at', ascending: false)
+                .limit(30);
+            _opinionResults = List<Map<String, dynamic>>.from(opRes)
+                .map((json) => Opinion.fromJson(json))
+                .toList();
+          } else {
+            _opinionResults = [];
+          }
+        }
+        _userResults = [];
+      } else {
+        // ─── GENERAL SEARCH (opinions by title/content) ───
+        _searchMode = 'all';
+        final searchTerm = query.trim().toLowerCase();
+
+        final opRes = await supabase
+            .from('opinions')
+            .select('*, profiles(username), zeroes(name), arguments(id, type)')
+            .or('title.ilike.%$searchTerm%,content.ilike.%$searchTerm%')
+            .order('created_at', ascending: false)
+            .limit(30);
+        _opinionResults = List<Map<String, dynamic>>.from(opRes)
+            .map((json) => Opinion.fromJson(json))
+            .toList();
+
+        _userResults = [];
+        _zeroResults = [];
+      }
+    } catch (e) {
+      debugPrint('Search error: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -53,9 +153,12 @@ class _SearchScreenState extends State<SearchScreen>
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: TextField(
               controller: _searchController,
-              onChanged: (v) => setState(() => _query = v),
+              onChanged: (v) {
+                setState(() => _query = v);
+                _performSearch(v);
+              },
               decoration: InputDecoration(
-                hintText: 'Search opinions, zeroes, users...',
+                hintText: '@user  ·  0zero  ·  search opinions...',
                 prefixIcon: Icon(Icons.search, color: secondaryText),
                 suffixIcon: _query.isNotEmpty
                     ? IconButton(
@@ -63,6 +166,7 @@ class _SearchScreenState extends State<SearchScreen>
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _query = '');
+                          _performSearch('');
                         },
                       )
                     : null,
@@ -70,171 +174,221 @@ class _SearchScreenState extends State<SearchScreen>
             ),
           ),
 
-          // Tabs
-          TabBar(
-            controller: _tabController,
-            tabs: const [
-              Tab(text: 'Opinions'),
-              Tab(text: 'Zeroes'),
-              Tab(text: 'Users'),
-            ],
-          ),
+          // Search mode hint
+          if (_query.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: primaryText.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      _searchMode == 'users'
+                          ? 'Searching Users'
+                          : _searchMode == 'zeroes'
+                              ? 'Searching Zeroes'
+                              : 'Searching Opinions',
+                      style: AppTypography.label(color: secondaryText),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
           Divider(height: 1, color: borderColor),
 
-          // Tab content
+          // Results
           Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                // Opinions tab
-                _buildOpinionsTab(primaryText, secondaryText),
-                // Zeroes tab
-                _buildZeroesTab(primaryText, secondaryText, borderColor, surfaceColor),
-                // Users tab (placeholder)
-                _buildUsersTab(secondaryText),
-              ],
-            ),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _query.isEmpty
+                    ? _buildEmptyState(secondaryText, primaryText)
+                    : _buildResults(primaryText, secondaryText, borderColor, surfaceColor),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildOpinionsTab(Color primaryText, Color secondaryText) {
-    final List<Opinion> filtered = [];
-
-    if (filtered.isEmpty) {
-      return VideoRefreshIndicator(
-        onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            SizedBox(
-              height: 200,
-              child: Center(child: Text('No opinions found', style: AppTypography.body(color: secondaryText))),
-            )
-          ],
-        ),
-      );
-    }
-
-    return VideoRefreshIndicator(
-      onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        itemCount: filtered.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          return OpinionCard(
-            opinion: filtered[index],
-            onTap: () => context.push('/opinion/${filtered[index].id}'),
-          );
-        },
+  Widget _buildEmptyState(Color secondaryText, Color primaryText) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.search, size: 48, color: secondaryText),
+          const SizedBox(height: 16),
+          Text('Search 0pinion', style: AppTypography.bodySemiBold(color: primaryText)),
+          const SizedBox(height: 8),
+          Text(
+            'Type @username to find users\nType 0topic to find zeroes\nOr just type to search opinions',
+            style: AppTypography.caption(color: secondaryText),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildZeroesTab(Color primaryText, Color secondaryText, Color borderColor, Color surfaceColor) {
-    final List<dynamic> filtered = [];
+  Widget _buildResults(Color primaryText, Color secondaryText, Color borderColor, Color surfaceColor) {
+    final bool hasResults = _opinionResults.isNotEmpty ||
+        _userResults.isNotEmpty ||
+        _zeroResults.isNotEmpty;
 
-    if (filtered.isEmpty) {
-      return VideoRefreshIndicator(
-        onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
+    if (!hasResults) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
-              height: 200,
-              child: Center(child: Text('No zeroes found', style: AppTypography.body(color: secondaryText))),
-            )
+            Icon(Icons.search_off, size: 48, color: secondaryText),
+            const SizedBox(height: 16),
+            Text('No results found', style: AppTypography.bodySemiBold(color: primaryText)),
+            const SizedBox(height: 8),
+            Text('Try a different search term', style: AppTypography.caption(color: secondaryText)),
           ],
         ),
       );
     }
 
-    return VideoRefreshIndicator(
-      onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        itemCount: filtered.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 8),
-        itemBuilder: (context, index) {
-        final zero = filtered[index];
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: surfaceColor,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: borderColor),
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // ─── Users Section ───
+        if (_userResults.isNotEmpty) ...[
+          Text('Users', style: AppTypography.captionMedium(color: secondaryText)),
+          const SizedBox(height: 8),
+          ..._userResults.map((user) => _buildUserTile(user, primaryText, secondaryText, borderColor, surfaceColor)),
+          const SizedBox(height: 24),
+        ],
+
+        // ─── Zeroes Section ───
+        if (_zeroResults.isNotEmpty) ...[
+          Text('Zeroes', style: AppTypography.captionMedium(color: secondaryText)),
+          const SizedBox(height: 8),
+          ..._zeroResults.map((zero) => _buildZeroTile(zero, primaryText, secondaryText, borderColor, surfaceColor)),
+          const SizedBox(height: 24),
+        ],
+
+        // ─── Opinions Section ───
+        if (_opinionResults.isNotEmpty) ...[
+          Text(
+            _searchMode == 'zeroes' ? 'Opinions in this Zero' : 'Opinions',
+            style: AppTypography.captionMedium(color: secondaryText),
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(zero.name, style: AppTypography.bodySemiBold(color: primaryText)),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${_formatCount(zero.opinionsCount)} opinions',
-                      style: AppTypography.caption(color: secondaryText),
-                    ),
-                  ],
+          const SizedBox(height: 8),
+          ..._opinionResults.map((opinion) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: OpinionCard(
+                  opinion: opinion,
+                  onTap: () => context.push('/opinion/${opinion.id}'),
                 ),
+              )),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildUserTile(Map<String, dynamic> user, Color primaryText, Color secondaryText, Color borderColor, Color surfaceColor) {
+    final username = user['username'] as String? ?? 'unknown';
+    final displayName = user['display_name'] as String?;
+    final avatarSeed = user['avatar_seed'] as int? ?? 1;
+    final reputation = user['reputation_score'] as int? ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(
+          children: [
+            AvatarWidget(seed: avatarSeed, size: 40),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('@$username', style: AppTypography.bodySemiBold(color: primaryText)),
+                  if (displayName != null && displayName.isNotEmpty)
+                    Text(displayName, style: AppTypography.caption(color: secondaryText)),
+                ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: zero.isJoined ? primaryText : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: primaryText),
-                ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: borderColor),
+              ),
+              child: Text(
+                '$reputation rep',
+                style: AppTypography.label(color: secondaryText),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildZeroTile(Map<String, dynamic> zero, Color primaryText, Color secondaryText, Color borderColor, Color surfaceColor) {
+    final name = zero['name'] as String? ?? '';
+    final description = zero['description'] as String?;
+    final opinionsCount = zero['opinions_count'] as int? ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: primaryText,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Center(
                 child: Text(
-                  zero.isJoined ? 'Joined' : 'Join',
-                  style: AppTypography.captionMedium(
-                    color: zero.isJoined
-                        ? (Theme.of(context).brightness == Brightness.dark ? AppColors.black : AppColors.white)
-                        : primaryText,
+                  '0',
+                  style: AppTypography.h3(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.black
+                        : AppColors.white,
                   ),
                 ),
               ),
-            ],
-          ),
-        );
-      },
-    ),
-    );
-  }
-
-  Widget _buildUsersTab(Color secondaryText) {
-    return VideoRefreshIndicator(
-      onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          SizedBox(
-            height: 300,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.person_search_outlined, size: 48, color: secondaryText),
-                const SizedBox(height: 16),
-                Text(
-                  'Search for users',
-                  style: AppTypography.body(color: secondaryText),
-                ),
-              ],
             ),
-          ),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('0$name', style: AppTypography.bodySemiBold(color: primaryText)),
+                  if (description != null && description.isNotEmpty)
+                    Text(description, style: AppTypography.caption(color: secondaryText), maxLines: 1, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+            Text(
+              '$opinionsCount opinions',
+              style: AppTypography.caption(color: secondaryText),
+            ),
+          ],
+        ),
       ),
     );
-  }
-
-  String _formatCount(int count) {
-    if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
-    return count.toString();
   }
 }
