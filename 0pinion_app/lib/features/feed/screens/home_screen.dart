@@ -245,23 +245,53 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return roomsAsync.when(
       loading: () => const Center(child: VideoLoader()),
-      error: (err, _) => Center(
-        child: Text('Error loading rooms: $err',
-            style: AppTypography.caption(color: secondaryText)),
+      error: (err, _) => VideoRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(liveRoomsProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: ListView(
+          key: const PageStorageKey<String>('live_rooms_error'),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: Center(
+                child: Text('Error loading rooms: $err',
+                    style: AppTypography.caption(color: secondaryText)),
+              ),
+            ),
+          ],
+        ),
       ),
       data: (rooms) {
         if (rooms.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
+          return VideoRefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(liveRoomsProvider);
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: ListView(
+              key: const PageStorageKey<String>('live_rooms_empty'),
+              physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                Icon(Icons.forum_outlined, size: 48, color: secondaryText),
-                const SizedBox(height: 16),
-                Text('No live rooms yet',
-                    style: AppTypography.bodySemiBold(color: primaryText)),
-                const SizedBox(height: 8),
-                Text('Create one from the + tab!',
-                    style: AppTypography.caption(color: secondaryText)),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.forum_outlined, size: 48, color: secondaryText),
+                        const SizedBox(height: 16),
+                        Text('No live rooms yet',
+                            style: AppTypography.bodySemiBold(color: primaryText)),
+                        const SizedBox(height: 8),
+                        Text('Create one from the + tab!',
+                            style: AppTypography.caption(color: secondaryText)),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           );
@@ -273,6 +303,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             await Future.delayed(const Duration(milliseconds: 500));
           },
           child: ListView.separated(
+            key: const PageStorageKey<String>('live_rooms_data'),
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             itemCount: rooms.length,
