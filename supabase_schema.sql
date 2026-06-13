@@ -189,3 +189,114 @@ CREATE TRIGGER update_cooking_trigger
 AFTER INSERT OR DELETE ON public.arguments
 FOR EACH ROW
 EXECUTE FUNCTION public.check_cooking_status();
+
+-------------------------------------------------------------------
+-- 6. COMMUNITIES
+-------------------------------------------------------------------
+
+CREATE TABLE public.communities (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT UNIQUE NOT NULL,
+    description TEXT,
+    creator_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    avatar_seed INTEGER NOT NULL DEFAULT floor(random() * 100000)::int,
+    member_count INTEGER NOT NULL DEFAULT 1,
+    post_count INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Community ↔ Zero many-to-many
+CREATE TABLE public.community_zeroes (
+    community_id UUID NOT NULL REFERENCES public.communities(id) ON DELETE CASCADE,
+    zero_id UUID NOT NULL REFERENCES public.zeroes(id) ON DELETE CASCADE,
+    PRIMARY KEY (community_id, zero_id)
+);
+
+-- Membership
+CREATE TABLE public.community_members (
+    community_id UUID NOT NULL REFERENCES public.communities(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'moderator', 'member')),
+    joined_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (community_id, user_id)
+);
+
+-- Discussion posts
+CREATE TABLE public.community_posts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    community_id UUID NOT NULL REFERENCES public.communities(id) ON DELETE CASCADE,
+    author_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    likes_count INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-------------------------------------------------------------------
+-- COMMUNITY RLS
+-------------------------------------------------------------------
+
+ALTER TABLE public.communities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_zeroes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_posts ENABLE ROW LEVEL SECURITY;
+
+-- Communities: public read, authenticated create, creator update/delete
+CREATE POLICY "Communities viewable by everyone" ON public.communities FOR SELECT USING (true);
+CREATE POLICY "Users can create communities" ON public.communities FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = creator_id);
+CREATE POLICY "Creators can update communities" ON public.communities FOR UPDATE TO authenticated USING ((select auth.uid()) = creator_id) WITH CHECK ((select auth.uid()) = creator_id);
+CREATE POLICY "Creators can delete communities" ON public.communities FOR DELETE TO authenticated USING ((select auth.uid()) = creator_id);
+
+-- Community zeroes: public read, creator insert/delete (handled via community ownership)
+CREATE POLICY "Community zeroes viewable by everyone" ON public.community_zeroes FOR SELECT USING (true);
+CREATE POLICY "Users can link zeroes to communities" ON public.community_zeroes FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Users can unlink zeroes from communities" ON public.community_zeroes FOR DELETE TO authenticated USING (true);
+
+-- Members: public read, self-join, self-leave
+CREATE POLICY "Members viewable by everyone" ON public.community_members FOR SELECT USING (true);
+CREATE POLICY "Users can join communities" ON public.community_members FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY "Users can leave communities" ON public.community_members FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
+
+-- Posts: public read, member insert, author delete
+CREATE POLICY "Community posts viewable by everyone" ON public.community_posts FOR SELECT USING (true);
+CREATE POLICY "Members can create posts" ON public.community_posts FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = author_id);
+CREATE POLICY "Authors can delete own posts" ON public.community_posts FOR DELETE TO authenticated USING ((select auth.uid()) = author_id);
+
+-------------------------------------------------------------------
+-- COMMUNITY TRIGGERS
+-------------------------------------------------------------------
+
+-- Auto-update member_count on join/leave
+CREATE OR REPLACE FUNCTION public.update_community_member_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE public.communities SET member_count = member_count + 1 WHERE id = NEW.community_id;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE public.communities SET member_count = GREATEST(member_count - 1, 0) WHERE id = OLD.community_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER community_member_count_trigger
+AFTER INSERT OR DELETE ON public.community_members
+FOR EACH ROW
+EXECUTE FUNCTION public.update_community_member_count();
+
+-- Auto-update post_count
+CREATE OR REPLACE FUNCTION public.update_community_post_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' THEN
+        UPDATE public.communities SET post_count = post_count + 1 WHERE id = NEW.community_id;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE public.communities SET post_count = GREATEST(post_count - 1, 0) WHERE id = OLD.community_id;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER community_post_count_trigger
+AFTER INSERT OR DELETE ON public.community_posts
+FOR EACH ROW
+EXECUTE FUNCTION public.update_community_post_count();
