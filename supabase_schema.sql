@@ -49,6 +49,10 @@ CREATE TABLE public.live_rooms (
     topic TEXT NOT NULL,
     host_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     participant_count INTEGER NOT NULL DEFAULT 1,
+    duration_minutes INTEGER NOT NULL DEFAULT 10,
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'closed')),
+    conclusion TEXT,
+    closed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
