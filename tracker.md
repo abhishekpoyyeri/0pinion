@@ -55,7 +55,7 @@ This file tracks the implementation progress of **0pinion**, a monochrome, text-
 - [x] Set up GoRouter with ShellRoute for bottom navigation
 - [x] Create data models (Opinion, Argument, Zero, UserProfile, LiveRoom, ChatMessage)
 - [x] Create mock data for development
-- [x] Build shared widgets (OpinionCard, ZeroChip, PrimaryButton, AvatarWidget, BottomNav)
+- [x] Build shared widgets (OpinionCard, ZeroChip, PrimaryButton, AvatarWidget, CustomNavigationDock)
 - [x] Flutter analyze — 0 issues
 - [ ] Configure Riverpod providers for state management
 - [ ] Integrate Dio networking package:
@@ -159,3 +159,19 @@ This file tracks the implementation progress of **0pinion**, a monochrome, text-
 - [ ] CI/CD & Deployment:
   - [ ] GitHub Actions workflows for testing and linting
   - [ ] Configure Fastlane for App Store & Play Store distributions
+
+---
+
+## Log of Custom Changes
+
+### June 13, 2026 - Bottom Navigation Bar Redesign
+- **Change**: Replaced the default Scaffold `BottomNavigationBar` with a custom floating navigation dock (`custom_navigation_dock.dart`).
+- **Details**:
+  - Implemented a centered, pill-shaped container.
+  - Used dark gray background `#1E1E1E` with 90% opacity and `BackdropFilter` (glassmorphism blur) to make it float seamlessly over page content.
+  - Set `extendBody: true` on the shell Scaffold to allow body content to scroll beneath the transparent floating navigation dock.
+  - Custom capsule highlight background with opacity transitions on active tabs (using `AnimatedContainer` over 250ms).
+  - Updated layout (June 13 Follow-up): Removed text labels and decreased the dock height to 60.0 with a corner radius of 30.0 for a more minimal, sleeker icon-only appearance.
+  - Clean implementation without altering go_router routes, providers, or screen logic.
+
+
