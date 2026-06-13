@@ -7,7 +7,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/opinion_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/opinion_provider.dart';
-
+import '../../../data/repositories/live_room_repository.dart';
 
 /// Home screen — For You / Cooking / Latest tabs with opinion feed
 class HomeScreen extends ConsumerStatefulWidget {
@@ -60,7 +60,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                       tabs: const [
                         Tab(text: 'For You'),
                         Tab(text: 'Cooking'),
-                        Tab(text: 'Latest'),
+                        Tab(text: 'Live'),
                       ],
                     ),
                     Divider(height: 1, color: borderColor),
@@ -110,7 +110,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           children: [
             _buildTab(opinionsAsync, (opinions) => opinions, 'for_you'),
             _buildTab(opinionsAsync, (opinions) => opinions.where((o) => o.isCooking).toList(), 'cooking'),
-            _buildTab(opinionsAsync, (opinions) => opinions.toList(), 'latest'),
+            _buildLiveRoomsTab(),
           ],
         ),
       ),
@@ -234,4 +234,145 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     );
   }
 
+  Widget _buildLiveRoomsTab() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
+    final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
+    final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
+
+    final roomsAsync = ref.watch(liveRoomsProvider);
+
+    return roomsAsync.when(
+      loading: () => const Center(child: VideoLoader()),
+      error: (err, _) => Center(
+        child: Text('Error loading rooms: $err',
+            style: AppTypography.caption(color: secondaryText)),
+      ),
+      data: (rooms) {
+        if (rooms.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.forum_outlined, size: 48, color: secondaryText),
+                const SizedBox(height: 16),
+                Text('No live rooms yet',
+                    style: AppTypography.bodySemiBold(color: primaryText)),
+                const SizedBox(height: 8),
+                Text('Create one from the + tab!',
+                    style: AppTypography.caption(color: secondaryText)),
+              ],
+            ),
+          );
+        }
+
+        return VideoRefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(liveRoomsProvider);
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            itemCount: rooms.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final room = rooms[index];
+              final roomId = room['id'] as String;
+              final title = room['title'] as String? ?? 'Untitled';
+              final topic = room['topic'] as String? ?? '';
+              final participantCount = room['participant_count'] as int? ?? 1;
+
+              final profileData = room['profiles'];
+              final hostUsername = profileData != null && profileData is Map
+                  ? (profileData['username'] as String? ?? 'unknown')
+                  : 'unknown';
+
+              return GestureDetector(
+                onTap: () => context.push('/live/$roomId'),
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: surfaceColor,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: primaryText,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              'LIVE',
+                              style: AppTypography.label(
+                                color: isDark
+                                    ? AppColors.black
+                                    : AppColors.white,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              title,
+                              style: AppTypography.bodySemiBold(
+                                  color: primaryText),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (topic.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          topic,
+                          style: AppTypography.caption(color: secondaryText),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Icon(Icons.person_outline,
+                              size: 16, color: secondaryText),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              'Hosted by @$hostUsername',
+                              style: AppTypography.caption(
+                                  color: secondaryText),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Icon(Icons.group_outlined,
+                              size: 16, color: secondaryText),
+                          const SizedBox(width: 4),
+                          Text(
+                            '$participantCount participants',
+                            style: AppTypography.caption(
+                                color: secondaryText),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 }

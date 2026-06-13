@@ -217,7 +217,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                 },
                 style: AppTypography.body(color: primaryText),
                 decoration: InputDecoration(
-                  hintText: 'e.g. Flutter Devs',
+                  hintText: 'e.g. Tech Enthusiasts',
                   hintStyle: AppTypography.body(color: secondaryText),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -314,7 +314,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                 decoration: InputDecoration(
                   hintText: 'Search zeroes to tag...',
                   hintStyle: AppTypography.body(color: secondaryText),
-                  prefixIcon: Icon(Icons.tag, color: secondaryText, size: 20),
+                  prefixIcon: Icon(Icons.exposure_zero, color: secondaryText, size: 20),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 ),
@@ -339,7 +339,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         child: Row(
                           children: [
-                            Icon(Icons.tag, size: 16, color: secondaryText),
+                            Icon(Icons.exposure_zero, size: 16, color: secondaryText),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
