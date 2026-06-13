@@ -35,7 +35,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     redirect: (context, state) {
       final isGoingToAuth = state.matchedLocation == '/splash' || 
-                            state.matchedLocation == '/signup';
+                            state.matchedLocation == '/signup' ||
+                            state.matchedLocation == '/login';
 
       if (!isAuthenticated) {
         if (!isGoingToAuth &&
@@ -59,7 +60,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/signup',
-        builder: (context, state) => const SignUpScreen(),
+        builder: (context, state) => const SignUpScreen(isLogin: false),
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const SignUpScreen(isLogin: true),
       ),
       GoRoute(
         path: '/username-setup',
