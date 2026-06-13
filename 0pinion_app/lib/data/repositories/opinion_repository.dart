@@ -41,7 +41,6 @@ class OpinionRepository {
       'content': content,
       'author_id': authorId,
       'is_anonymous': isAnonymous,
-      'is_cooking': false,
       'zero_id': ?zeroId,
     });
   }

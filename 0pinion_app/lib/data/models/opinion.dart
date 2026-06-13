@@ -1,3 +1,5 @@
+import 'dart:math';
+
 class Opinion {
   final String id;
   final String title;
@@ -9,7 +11,6 @@ class Opinion {
   final int supportCount;
   final int opposeCount;
   final int questionCount;
-  final bool isCooking;
   final DateTime createdAt;
 
   const Opinion({
@@ -23,11 +24,27 @@ class Opinion {
     this.supportCount = 0,
     this.opposeCount = 0,
     this.questionCount = 0,
-    this.isCooking = false,
     required this.createdAt,
   });
 
   int get totalDebates => supportCount + opposeCount + questionCount;
+
+  /// Weighted engagement: support=1, oppose=1, question=2
+  int get weightedEngagement =>
+      (supportCount * 1) + (opposeCount * 1) + (questionCount * 2);
+
+  /// Time-decay cooking score.
+  /// Higher = more cooking. Decays aggressively with age.
+  /// Formula: weightedEngagement / (ageHours + 2)^1.5
+  double get cookingScore {
+    if (weightedEngagement == 0) return 0.0;
+    final ageHours =
+        DateTime.now().difference(createdAt).inMinutes / 60.0;
+    return weightedEngagement / pow(ageHours + 2, 1.5);
+  }
+
+  /// A post is "cooking" if it has meaningful engagement (>= 3 weighted points)
+  bool get isCooking => weightedEngagement >= 3 && cookingScore > 0;
 
   factory Opinion.fromJson(Map<String, dynamic> json) {
     return Opinion(
@@ -38,7 +55,6 @@ class Opinion {
       authorUsername: json['profiles']?['username'] as String? ?? 'Anonymous',
       isAnonymous: json['is_anonymous'] as bool? ?? false,
       zeroes: json['zeroes'] != null ? [json['zeroes']['name'] as String] : [],
-      isCooking: json['is_cooking'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
       supportCount: (json['arguments'] as List?)?.where((a) => a['type'] == 'support').length ?? 0,
       opposeCount: (json['arguments'] as List?)?.where((a) => a['type'] == 'oppose').length ?? 0,
@@ -57,7 +73,6 @@ class Opinion {
     int? supportCount,
     int? opposeCount,
     int? questionCount,
-    bool? isCooking,
     DateTime? createdAt,
   }) {
     return Opinion(
@@ -71,7 +86,6 @@ class Opinion {
       supportCount: supportCount ?? this.supportCount,
       opposeCount: opposeCount ?? this.opposeCount,
       questionCount: questionCount ?? this.questionCount,
-      isCooking: isCooking ?? this.isCooking,
       createdAt: createdAt ?? this.createdAt,
     );
   }
