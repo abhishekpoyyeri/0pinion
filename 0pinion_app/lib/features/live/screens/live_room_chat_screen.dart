@@ -87,6 +87,37 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
       });
       _startCountdown();
     }
+    
+    // Fetch message history
+    try {
+      final supabase = ref.read(supabaseClientProvider);
+      final msgRes = await supabase
+          .from('live_room_messages')
+          .select('*, profiles(username)')
+          .eq('room_id', widget.roomId)
+          .order('created_at', ascending: true);
+          
+      if (mounted) {
+        setState(() {
+          for (final row in msgRes) {
+            final profileData = row['profiles'];
+            final username = profileData != null && profileData is Map
+                ? (profileData['username'] as String? ?? 'unknown')
+                : 'unknown';
+                
+            _messages.add(_ChatMsg(
+              senderId: row['sender_id'] as String,
+              senderUsername: username,
+              content: row['content'] as String,
+              timestamp: DateTime.parse(row['created_at'] as String).toLocal(),
+            ));
+          }
+        });
+        _scrollToBottom();
+      }
+    } catch (_) {
+      // Ignore if history fails to load
+    }
   }
 
   void _startCountdown() {
@@ -204,7 +235,7 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
     });
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty || _roomStatus == 'closed') return;
 
@@ -234,6 +265,17 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
 
     _messageController.clear();
     _scrollToBottom();
+    
+    // Also save to database for history
+    try {
+      final supabase = ref.read(supabaseClientProvider);
+      await supabase.from('live_room_messages').insert({
+        'room_id': widget.roomId,
+        'sender_id': user.id,
+        'content': text,
+        'created_at': now.toUtc().toIso8601String(),
+      });
+    } catch (_) {}
   }
 
   void _scrollToBottom() {

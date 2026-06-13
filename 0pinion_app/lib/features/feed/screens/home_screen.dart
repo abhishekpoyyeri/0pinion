@@ -110,7 +110,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           controller: _tabController,
           children: [
             KeepAliveWrapper(child: _buildTab(opinionsAsync, (opinions) => opinions, 'for_you')),
-            KeepAliveWrapper(child: _buildTab(opinionsAsync, (opinions) => opinions.where((o) => o.isCooking).toList(), 'cooking')),
+            KeepAliveWrapper(child: _buildCookingTab()),
             KeepAliveWrapper(child: _buildLiveRoomsTab()),
           ],
         ),
@@ -162,6 +162,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                         textAlign: TextAlign.center,
                       ),
                     ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCookingTab() {
+    final cookingAsync = ref.watch(cookingOpinionsProvider);
+    return cookingAsync.when(
+      data: (opinions) => _buildFeed(opinions, 'cooking'),
+      loading: () => const Center(child: VideoLoader()),
+      error: (err, stack) => VideoRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(feedOpinionsProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: ListView(
+          key: const PageStorageKey<String>('cooking_error'),
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.of(context).size.height * 0.5,
+              child: Center(
+                child: Text(
+                  'Could not load cooking opinions',
+                  style: AppTypography.body(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.darkSecondaryText
+                        : AppColors.lightSecondaryText,
                   ),
                 ),
               ),
