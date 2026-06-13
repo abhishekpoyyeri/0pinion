@@ -7,6 +7,7 @@ import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/widgets/video_refresh_indicator.dart';
 import '../../../core/widgets/video_loader.dart';
 import '../../../core/providers/community_provider.dart';
+import '../../../core/providers/supabase_provider.dart';
 import '../../../data/repositories/community_repository.dart';
 import '../../../data/models/community_post.dart';
 
@@ -56,6 +57,50 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
     }
   }
 
+  Future<void> _confirmDeleteCommunity(String communityName) async {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
+    final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        title: Text('Delete Community?', style: AppTypography.h3(color: primaryText)),
+        content: Text(
+          'Are you sure you want to permanently delete "$communityName"? This will remove all posts, members, and data associated with it. This action cannot be undone.',
+          style: AppTypography.body(color: secondaryText),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('Cancel', style: AppTypography.bodySemiBold(color: secondaryText)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text('Delete', style: AppTypography.bodySemiBold(color: Theme.of(context).colorScheme.error)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      try {
+        await ref.read(communityRepositoryProvider).deleteCommunity(widget.communityId);
+        ref.invalidate(communitiesProvider);
+        if (mounted) {
+          context.pop();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete community: $e')),
+          );
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -75,6 +120,21 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
           data: (c) => Text(c.name, style: AppTypography.h2(color: primaryText)),
           loading: () => Text('Loading...', style: AppTypography.h2(color: primaryText)),
           error: (error, stackTrace) => Text('Community', style: AppTypography.h2(color: primaryText)),
+        ),
+        actions: communityAsync.maybeWhen(
+          data: (community) {
+            final currentUserId = ref.watch(supabaseClientProvider).auth.currentUser?.id;
+            if (community.creatorId == currentUserId) {
+              return [
+                IconButton(
+                  icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
+                  onPressed: () => _confirmDeleteCommunity(community.name),
+                ),
+              ];
+            }
+            return null;
+          },
+          orElse: () => null,
         ),
       ),
       body: communityAsync.when(
