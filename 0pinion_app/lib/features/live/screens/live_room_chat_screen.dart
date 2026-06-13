@@ -53,6 +53,7 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
   String? _conclusion;
   int _presenceCount = 0;
   String? _myUsername;
+  bool _isLoaded = false;
 
   // Countdown
   Duration _remaining = Duration.zero;
@@ -82,6 +83,7 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
         _hostUsername = profileData != null && profileData is Map
             ? (profileData['username'] as String? ?? 'unknown')
             : 'unknown';
+        _isLoaded = true;
       });
       _startCountdown();
     }
@@ -417,6 +419,20 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
     final surfaceColor = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final currentUserId = ref.watch(currentUserProvider)?.id;
+
+    if (!_isLoaded) {
+      return Scaffold(
+        backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
+          title: Text('Loading...', style: AppTypography.bodyMedium(color: primaryText)),
+        ),
+        body: const Center(child: CircularProgressIndicator.adaptive()),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(

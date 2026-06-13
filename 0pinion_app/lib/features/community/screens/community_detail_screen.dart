@@ -117,6 +117,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
           onPressed: () => context.pop(),
         ),
         title: communityAsync.when(
+          skipLoadingOnRefresh: true,
           data: (c) => Text(c.name, style: AppTypography.h2(color: primaryText)),
           loading: () => Text('Loading...', style: AppTypography.h2(color: primaryText)),
           error: (error, stackTrace) => Text('Community', style: AppTypography.h2(color: primaryText)),
@@ -138,6 +139,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
         ),
       ),
       body: communityAsync.when(
+        skipLoadingOnRefresh: true,
         loading: () => const Center(child: VideoLoader()),
         error: (err, _) => Center(
           child: Column(
@@ -305,6 +307,7 @@ class _PostsTab extends ConsumerWidget {
     final postsAsync = ref.watch(communityPostsProvider(communityId));
 
     return postsAsync.when(
+      skipLoadingOnRefresh: true,
       loading: () => const Center(child: VideoLoader()),
       error: (err, _) => Center(
         child: Text('Error loading posts', style: AppTypography.body(color: secondaryText)),
@@ -424,6 +427,7 @@ class _MembersTab extends ConsumerWidget {
     final membersAsync = ref.watch(communityMembersProvider(communityId));
 
     return membersAsync.when(
+      skipLoadingOnRefresh: true,
       loading: () => const Center(child: VideoLoader()),
       error: (err, _) => Center(
         child: Text('Error loading members', style: AppTypography.body(color: secondaryText)),
