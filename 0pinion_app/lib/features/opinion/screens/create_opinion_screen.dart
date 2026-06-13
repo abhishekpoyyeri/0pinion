@@ -4,12 +4,13 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../../core/utils/error_handler.dart';
 import '../../../core/widgets/primary_button.dart';
 import '../../../core/providers/supabase_provider.dart';
 import '../../../data/repositories/opinion_repository.dart';
 import '../../../data/repositories/auth_repository.dart';
 import '../../../data/repositories/live_room_repository.dart';
-import '../../../core/utils/error_handler.dart';
+import '../../../data/repositories/zero_repository.dart';
 
 /// Screen to create a new opinion or a live room
 class CreateOpinionScreen extends ConsumerStatefulWidget {
@@ -24,29 +25,56 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
   final _opinionTitleController = TextEditingController();
   final _opinionContentController = TextEditingController();
   bool _isAnonymous = false;
-  String? _selectedZeroId;
   bool _isOpinionLoading = false;
+
+  // Detected zeroes from content
+  List<String> _detectedZeroes = [];
 
   // Live Room Controllers
   final _roomTitleController = TextEditingController();
   final _roomTopicController = TextEditingController();
   bool _isRoomLoading = false;
 
-  // We temporarily hardcode some zeroes since we don't have a Zero repository yet.
-  // In a real app we would fetch this from Supabase `zeroes` table.
-  final _mockZeroes = [
-    {'id': null, 'name': 'Technology'},
-    {'id': null, 'name': 'Politics'},
-    {'id': null, 'name': 'Philosophy'},
-  ];
+  /// Regex to detect 0word patterns (e.g. 0laptop, 0politics)
+  /// Matches: word boundary + "0" + one or more word characters
+  static final _zeroPattern = RegExp(r'(?:^|\s)0([a-zA-Z]\w*)', multiLine: true);
+
+  @override
+  void initState() {
+    super.initState();
+    _opinionContentController.addListener(_parseZeroes);
+  }
 
   @override
   void dispose() {
+    _opinionContentController.removeListener(_parseZeroes);
     _opinionTitleController.dispose();
     _opinionContentController.dispose();
     _roomTitleController.dispose();
     _roomTopicController.dispose();
     super.dispose();
+  }
+
+  /// Parse the content field and extract all 0word mentions
+  void _parseZeroes() {
+    final content = _opinionContentController.text;
+    final matches = _zeroPattern.allMatches(content);
+    final zeroes = matches
+        .map((m) => m.group(1)!.toLowerCase())
+        .toSet() // unique
+        .toList();
+
+    if (_listsDiffer(_detectedZeroes, zeroes)) {
+      setState(() => _detectedZeroes = zeroes);
+    }
+  }
+
+  bool _listsDiffer(List<String> a, List<String> b) {
+    if (a.length != b.length) return true;
+    for (int i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return true;
+    }
+    return false;
   }
 
   Future<void> _submitOpinion() async {
@@ -65,7 +93,8 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
     try {
       final repo = ref.read(opinionRepositoryProvider);
       final authRepo = ref.read(authRepositoryProvider);
-      
+      final zeroRepo = ref.read(zeroRepositoryProvider);
+
       // EXPLICIT CHECK: Ensure they have a profile before proceeding!
       final hasProfile = await authRepo.hasProfile(user.id);
       if (!hasProfile) {
@@ -78,14 +107,20 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
         return;
       }
 
+      // Resolve the first detected zero (find or create)
+      String? resolvedZeroId;
+      if (_detectedZeroes.isNotEmpty) {
+        resolvedZeroId = await zeroRepo.findOrCreate(_detectedZeroes.first);
+      }
+
       await repo.createOpinion(
         title: title,
         content: content,
         authorId: user.id,
         isAnonymous: _isAnonymous,
-        zeroId: _selectedZeroId,
+        zeroId: resolvedZeroId,
       );
-      
+
       if (mounted) {
         context.go('/home');
       }
@@ -116,7 +151,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
     try {
       final repo = ref.read(liveRoomRepositoryProvider);
       final authRepo = ref.read(authRepositoryProvider);
-      
+
       final hasProfile = await authRepo.hasProfile(user.id);
       if (!hasProfile) {
         if (mounted) {
@@ -133,7 +168,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
         topic: topic,
         hostId: user.id,
       );
-      
+
       if (mounted) {
         context.go('/live');
       }
@@ -215,41 +250,82 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
               style: AppTypography.body(color: primaryText),
               maxLines: 6,
               decoration: InputDecoration(
-                hintText: 'Expand on your thoughts. Why do you hold this view? Be concise.',
+                hintText: 'Expand on your thoughts...\n\nMention zeroes like 0technology 0politics',
                 hintStyle: AppTypography.body(color: secondaryText),
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
-            Divider(color: borderColor),
-            const SizedBox(height: 24),
+            // Detected Zeroes (live preview)
+            if (_detectedZeroes.isNotEmpty) ...[
+              Divider(color: borderColor),
+              const SizedBox(height: 12),
+              Text('Detected Zeroes', style: AppTypography.captionMedium(color: secondaryText)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _detectedZeroes.map((zero) {
+                  final isFirst = zero == _detectedZeroes.first;
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isFirst ? primaryText : Colors.transparent,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: primaryText),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '0$zero',
+                          style: AppTypography.captionMedium(
+                            color: isFirst
+                                ? (isDark ? AppColors.black : AppColors.white)
+                                : primaryText,
+                          ),
+                        ),
+                        if (isFirst) ...[
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.check_circle,
+                            size: 14,
+                            color: isDark ? AppColors.black : AppColors.white,
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'The first zero (0${_detectedZeroes.first}) will be tagged',
+                style: AppTypography.label(color: secondaryText),
+              ),
+              const SizedBox(height: 16),
+            ],
 
-            // Tag a Zero
-            Text('Tag a Zero (Optional)', style: AppTypography.captionMedium(color: primaryText)),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _mockZeroes.map((zero) {
-                final isSelected = _selectedZeroId == zero['name'];
-                return FilterChip(
-                  label: Text(zero['name'] as String),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      _selectedZeroId = selected ? zero['id'] : null;
-                    });
-                  },
-                  backgroundColor: Colors.transparent,
-                  selectedColor: isDark ? Colors.white24 : Colors.black12,
-                  shape: StadiumBorder(side: BorderSide(color: borderColor)),
-                );
-              }).toList(),
-            ),
-            const SizedBox(height: 32),
+            if (_detectedZeroes.isEmpty) ...[
+              Divider(color: borderColor),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.info_outline, size: 14, color: secondaryText),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Type 0 followed by a topic name (e.g. 0laptop) to tag a zero',
+                      style: AppTypography.label(color: secondaryText),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+            ],
 
             // Anonymity Toggle
             Row(
