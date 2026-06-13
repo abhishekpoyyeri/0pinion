@@ -60,6 +60,14 @@ CREATE TABLE public.chat_messages (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- 6. SEARCH HISTORY
+CREATE TABLE public.search_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    query TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -------------------------------------------------------------------
 -- ROW-LEVEL SECURITY (RLS)
 -------------------------------------------------------------------
@@ -70,6 +78,7 @@ ALTER TABLE public.opinions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.arguments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.live_rooms ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.search_history ENABLE ROW LEVEL SECURITY;
 
 -- PROFILES
 -- Anyone can read profiles
@@ -115,6 +124,14 @@ CREATE POLICY "Chat messages viewable by everyone" ON public.chat_messages FOR S
 -- Authenticated insert
 CREATE POLICY "Users can insert rooms" ON public.live_rooms FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = host_id);
 CREATE POLICY "Users can insert messages" ON public.chat_messages FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = author_id);
+
+-- SEARCH HISTORY
+CREATE POLICY "Users can view their own search history" ON public.search_history
+    FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY "Users can insert their own search history" ON public.search_history
+    FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY "Users can delete their own search history" ON public.search_history
+    FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -------------------------------------------------------------------
 -- ANONYMITY VIEW
