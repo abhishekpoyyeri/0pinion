@@ -27,7 +27,6 @@ CREATE TABLE public.opinions (
     author_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     zero_id UUID REFERENCES public.zeroes(id) ON DELETE SET NULL,
     is_anonymous BOOLEAN NOT NULL DEFAULT false,
-    is_cooking BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -39,7 +38,8 @@ CREATE TABLE public.arguments (
     type TEXT NOT NULL CHECK (type IN ('support', 'oppose', 'question')),
     content TEXT NOT NULL,
     is_anonymous BOOLEAN NOT NULL DEFAULT false,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    CONSTRAINT arguments_unique_user_opinion_type UNIQUE (opinion_id, author_id, type)
 );
 
 -- 5. LIVE ROOMS & MESSAGES
@@ -149,7 +149,6 @@ SELECT
     content,
     zero_id,
     is_anonymous,
-    is_cooking,
     created_at,
     CASE WHEN is_anonymous THEN NULL ELSE author_id END AS author_id
 FROM public.opinions;
@@ -168,48 +167,11 @@ FROM public.arguments;
 -------------------------------------------------------------------
 -- TRIGGERS & FUNCTIONS
 -------------------------------------------------------------------
--- Function to dynamically compute 'is_cooking' for an opinion 
--- based on argument count vs global average
-CREATE OR REPLACE FUNCTION public.check_cooking_status()
-RETURNS TRIGGER AS $$
-DECLARE
-    avg_interaction FLOAT;
-    total_opinions INT;
-    total_arguments INT;
-    opinion_interaction INT;
-    min_threshold INT := 3; -- Minimum interactions required
-    multiplier FLOAT := 1.5; -- Must be 50% higher than average
-BEGIN
-    -- Get total stats
-    SELECT COUNT(*) INTO total_opinions FROM public.opinions;
-    SELECT COUNT(*) INTO total_arguments FROM public.arguments;
-    
-    -- Calculate average
-    IF total_opinions > 0 THEN
-        avg_interaction := total_arguments::FLOAT / total_opinions::FLOAT;
-    ELSE
-        avg_interaction := 0;
-    END IF;
-
-    -- Get specific opinion count
-    SELECT COUNT(*) INTO opinion_interaction 
-    FROM public.arguments 
-    WHERE opinion_id = COALESCE(NEW.opinion_id, OLD.opinion_id);
-
-    -- Update the opinion's is_cooking flag
-    UPDATE public.opinions
-    SET is_cooking = (opinion_interaction >= min_threshold AND opinion_interaction > (avg_interaction * multiplier))
-    WHERE id = COALESCE(NEW.opinion_id, OLD.opinion_id);
-
-    RETURN NULL;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- Create the trigger
-CREATE TRIGGER update_cooking_trigger
-AFTER INSERT OR DELETE ON public.arguments
-FOR EACH ROW
-EXECUTE FUNCTION public.check_cooking_status();
+-- COOKING ALGORITHM
+-- Cooking scores are computed client-side using a time-decay formula:
+--   weightedEngagement = (support * 1) + (oppose * 1) + (question * 2)
+--   cookingScore = weightedEngagement / (ageHours + 2)^1.5
+-- No database trigger or stored flag is needed.
 
 -------------------------------------------------------------------
 -- 6. COMMUNITIES
