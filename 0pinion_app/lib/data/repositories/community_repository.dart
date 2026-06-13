@@ -204,6 +204,11 @@ class CommunityRepository {
     }).toList();
   }
 
+  /// Delete a community (only allowed by creator via RLS/UI)
+  Future<void> deleteCommunity(String communityId) async {
+    await _supabase.from('communities').delete().eq('id', communityId);
+  }
+
   /// Check if community name is available
   Future<bool> isNameAvailable(String name) async {
     final res = await _supabase
