@@ -86,7 +86,7 @@ This file tracks the implementation progress of **0pinion**, a monochrome, text-
 - [ ] PostgreSQL Triggers & Functions:
   - [ ] Trigger to update reputation scores based on votes/arguments
   - [ ] Trigger to increment/decrement `opinions_count` on Zeroes
-  - [ ] Function to compute "Cooking" feed trending score
+  - [x] Function to compute "Cooking" feed trending score
 
 ---
 
@@ -118,7 +118,7 @@ This file tracks the implementation progress of **0pinion**, a monochrome, text-
   - [ ] Create/Edit/Delete opinions with Supabase
   - [ ] Post arguments to Support/Oppose/Question zones
   - [ ] Join / Leave Zeroes (database + local cache)
-  - [ ] Cooking feed algorithm (activity-based momentum)
+  - [x] Cooking feed algorithm (activity-based momentum)
 
 ---
 
