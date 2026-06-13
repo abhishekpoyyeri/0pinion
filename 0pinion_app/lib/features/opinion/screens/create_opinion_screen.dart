@@ -34,6 +34,11 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
   final _roomTitleController = TextEditingController();
   final _roomTopicController = TextEditingController();
   bool _isRoomLoading = false;
+  int _selectedDuration = 10; // minutes
+  bool _isCustomDuration = false;
+  final _customDurationController = TextEditingController();
+
+  static const _durationOptions = [5, 10, 15, 30, 60];
 
   /// Regex to detect 0word patterns (e.g. 0laptop, 0politics)
   /// Matches: word boundary + "0" + one or more word characters
@@ -52,6 +57,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
     _opinionContentController.dispose();
     _roomTitleController.dispose();
     _roomTopicController.dispose();
+    _customDurationController.dispose();
     super.dispose();
   }
 
@@ -163,10 +169,19 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
         return;
       }
 
+      int finalDuration = _selectedDuration;
+      if (_isCustomDuration) {
+        final parsed = int.tryParse(_customDurationController.text.trim());
+        if (parsed != null && parsed > 0) {
+          finalDuration = parsed;
+        }
+      }
+
       await repo.createRoom(
         title: title,
         topic: topic,
         hostId: user.id,
+        durationMinutes: finalDuration,
       );
 
       if (mounted) {
@@ -366,6 +381,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
     final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
+    final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     return SafeArea(
       child: SingleChildScrollView(
@@ -401,6 +417,83 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
                 focusedBorder: InputBorder.none,
               ),
             ),
+            const SizedBox(height: 24),
+
+            // Duration Picker
+            Text('Room Duration', style: AppTypography.captionMedium(color: primaryText)),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ..._durationOptions.map((mins) {
+                  final isSelected = !_isCustomDuration && _selectedDuration == mins;
+                  final label = mins >= 60 ? '${mins ~/ 60} hr' : '$mins min';
+                  return GestureDetector(
+                    onTap: () => setState(() {
+                      _isCustomDuration = false;
+                      _selectedDuration = mins;
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected ? primaryText : Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: primaryText),
+                      ),
+                      child: Text(
+                        label,
+                        style: AppTypography.captionMedium(
+                          color: isSelected
+                              ? (isDark ? AppColors.black : AppColors.white)
+                              : primaryText,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+                GestureDetector(
+                  onTap: () => setState(() => _isCustomDuration = true),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _isCustomDuration ? primaryText : Colors.transparent,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: primaryText),
+                    ),
+                    child: Text(
+                      'Custom',
+                      style: AppTypography.captionMedium(
+                        color: _isCustomDuration
+                            ? (isDark ? AppColors.black : AppColors.white)
+                            : primaryText,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (_isCustomDuration) ...[
+              const SizedBox(height: 16),
+              TextField(
+                controller: _customDurationController,
+                keyboardType: TextInputType.number,
+                style: AppTypography.body(color: primaryText),
+                decoration: InputDecoration(
+                  hintText: 'Enter minutes (e.g. 45)',
+                  hintStyle: AppTypography.body(color: secondaryText),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: borderColor),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: borderColor),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                ),
+              ),
+            ],
             const SizedBox(height: 40),
 
             // Submit
