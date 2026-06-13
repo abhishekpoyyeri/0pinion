@@ -350,7 +350,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
 
             // Submit
             _isOpinionLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: VideoLoader())
                 : PrimaryButton(
                     label: 'Post Opinion',
                     onPressed: _submitOpinion,
@@ -405,7 +405,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
 
             // Submit
             _isRoomLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: VideoLoader())
                 : PrimaryButton(
                     label: 'Create Live Room',
                     onPressed: _submitLiveRoom,

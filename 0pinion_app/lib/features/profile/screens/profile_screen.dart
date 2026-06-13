@@ -211,7 +211,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         );
       },
       loading: () => const Center(child: VideoLoader()),
-      error: (e, _) => Center(child: Text('Error loading opinions', style: AppTypography.body(color: secondaryText))),
+      error: (e, _) => VideoRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(feedOpinionsProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: 200,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.wifi_off_outlined, size: 32, color: Theme.of(context).colorScheme.error),
+                    const SizedBox(height: 8),
+                    Text('Connection lost', style: AppTypography.bodyMedium(color: primaryText)),
+                    Text('Pull to refresh', style: AppTypography.caption(color: secondaryText)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -331,7 +355,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         );
       },
       loading: () => const Center(child: VideoLoader()),
-      error: (e, _) => Center(child: Text('Error loading arguments', style: AppTypography.body(color: secondaryText))),
+      error: (e, _) => VideoRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(userArgumentsProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: 200,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.wifi_off_outlined, size: 32, color: Theme.of(context).colorScheme.error),
+                    const SizedBox(height: 8),
+                    Text('Connection lost', style: AppTypography.bodyMedium(color: primaryText)),
+                    Text('Pull to refresh', style: AppTypography.caption(color: secondaryText)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -426,7 +474,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         );
       },
       loading: () => const Center(child: VideoLoader()),
-      error: (e, _) => Center(child: Text('Error loading zeroes', style: AppTypography.body(color: secondaryText))),
+      error: (e, _) => VideoRefreshIndicator(
+        onRefresh: () async {
+          ref.invalidate(userZeroesProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+        },
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: 200,
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.wifi_off_outlined, size: 32, color: Theme.of(context).colorScheme.error),
+                    const SizedBox(height: 8),
+                    Text('Connection lost', style: AppTypography.bodyMedium(color: primaryText)),
+                    Text('Pull to refresh', style: AppTypography.caption(color: secondaryText)),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
