@@ -1,3 +1,4 @@
+import 'package:opinion_app/core/widgets/video_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -82,11 +83,25 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   const Spacer(flex: 3),
 
                   // Wordmark
-                  Image.asset(
-                    'assets/title.png',
-                    height: 56,
-                    fit: BoxFit.contain,
-                    color: primaryText,
+                  Semantics(
+                    label: '0pinion',
+                    child: Image.asset(
+                      'assets/title.png',
+                      height: 80,
+                      fit: BoxFit.contain,
+                      color: primaryText,
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 0,
+                    height: 0,
+                    child: Text(
+                      '0pinion',
+                      style: TextStyle(
+                        color: Colors.transparent,
+                        fontSize: 0,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 16),
 
@@ -99,18 +114,23 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                   const Spacer(flex: 4),
 
-                  // Get Started button
-                  PrimaryButton(
-                    label: 'Get Started',
-                    onPressed: () => context.go('/signup'),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Login button
-                  SecondaryButton(
-                    label: 'Login',
-                    onPressed: () => context.go('/signup'),
-                  ),
+                  // Get Started / Login buttons or Loader
+                  if (ref.watch(authStateProvider).isLoading || !ref.watch(authStateProvider).hasValue)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24.0),
+                      child: VideoLoader(),
+                    )
+                  else ...[
+                    PrimaryButton(
+                      label: 'Get Started',
+                      onPressed: () => context.go('/signup'),
+                    ),
+                    const SizedBox(height: 12),
+                    SecondaryButton(
+                      label: 'Login',
+                      onPressed: () => context.go('/signup'),
+                    ),
+                  ],
 
                   const SizedBox(height: 48),
                 ],

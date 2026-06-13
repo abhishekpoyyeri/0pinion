@@ -10,7 +10,7 @@ Future<void> main() async {
   // Initialize Supabase
   await Supabase.initialize(
     url: 'https://wkiaeidzwixuftjoyhcx.supabase.co',
-    anonKey: 'sb_publishable_KvhkSEzcLQgob3FIX_svLg_Tecjn1Z6',
+    publishableKey: 'sb_publishable_KvhkSEzcLQgob3FIX_svLg_Tecjn1Z6',
   );
 
   // System UI overlay style for monochrome theme

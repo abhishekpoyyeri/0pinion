@@ -1,3 +1,4 @@
+import 'package:opinion_app/core/widgets/video_loader.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +7,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/widgets/primary_button.dart';
+import '../../../core/utils/error_handler.dart';
 import '../../../core/providers/supabase_provider.dart';
 import '../../../data/repositories/auth_repository.dart';
 
@@ -44,9 +46,7 @@ class _UsernameSetupScreenState extends ConsumerState<UsernameSetupScreen> {
 
     final user = ref.read(currentUserProvider);
     if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Error: Not authenticated.')),
-      );
+      AppErrorHandler.showErrorDialog(context, 'Error: Not authenticated.');
       return;
     }
 
@@ -62,9 +62,7 @@ class _UsernameSetupScreenState extends ConsumerState<UsernameSetupScreen> {
       if (mounted) context.go('/select-zeroes');
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        AppErrorHandler.showErrorDialog(context, e);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -152,7 +150,7 @@ class _UsernameSetupScreenState extends ConsumerState<UsernameSetupScreen> {
               const SizedBox(height: 40),
 
               _isLoading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: VideoLoader())
                   : PrimaryButton(
                       label: 'Continue',
                       onPressed: _saveProfile,

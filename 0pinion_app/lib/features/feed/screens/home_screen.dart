@@ -1,3 +1,5 @@
+import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
+import 'package:opinion_app/core/widgets/video_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -39,53 +41,92 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final opinionsAsync = ref.watch(feedOpinionsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Image.asset(
-          'assets/title.png',
-          height: 28,
-          fit: BoxFit.contain,
-          color: primaryText,
-        ),
-        centerTitle: false,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Column(
-            children: [
-              TabBar(
-                controller: _tabController,
-                tabs: const [
-                  Tab(text: 'For You'),
-                  Tab(text: 'Cooking'),
-                  Tab(text: 'Latest'),
-                ],
+      body: NestedScrollView(
+        headerSliverBuilder: (context, innerBoxIsScrolled) {
+          return [
+            SliverAppBar(
+              expandedHeight: 140.0,
+              collapsedHeight: 64.0,
+              pinned: true,
+              floating: false,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(48),
+                child: Column(
+                  children: [
+                    TabBar(
+                      controller: _tabController,
+                      tabs: const [
+                        Tab(text: 'For You'),
+                        Tab(text: 'Cooking'),
+                        Tab(text: 'Latest'),
+                      ],
+                    ),
+                    Divider(height: 1, color: borderColor),
+                  ],
+                ),
               ),
-              Divider(height: 1, color: borderColor),
-            ],
-          ),
+              flexibleSpace: LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  final double top = constraints.biggest.height;
+                  final double statusBarHeight = MediaQuery.of(context).padding.top;
+                  
+                  // The collapsed height is toolbar + bottom + statusbar
+                  final double minHeight = statusBarHeight + 64.0 + 48.0;
+                  // The expanded height is expandedHeight + statusbar
+                  final double maxHeight = statusBarHeight + 140.0;
+                  
+                  double expandRatio = (top - minHeight) / (maxHeight - minHeight);
+                  expandRatio = expandRatio.clamp(0.0, 1.0);
+
+                  return Container(
+                    padding: EdgeInsets.only(
+                      top: statusBarHeight,
+                      bottom: 48.0 + 8.0, // Space for TabBar + a little bottom padding
+                      left: 24.0 * (1.0 - expandRatio), // Safe left padding when collapsed
+                    ),
+                    child: Align(
+                      alignment: Alignment.lerp(
+                        Alignment.bottomLeft,
+                        Alignment.bottomCenter,
+                        expandRatio,
+                      )!,
+                      child: Image.asset(
+                        'assets/title.png',
+                        height: 28.0, // Reduced to prevent the zoomed-in look
+                        fit: BoxFit.contain,
+                        color: primaryText,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ];
+        },
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _buildTab(opinionsAsync, (opinions) => opinions),
+            _buildTab(opinionsAsync, (opinions) => opinions.where((o) => o.isCooking).toList()),
+            _buildTab(opinionsAsync, (opinions) => opinions.toList()), 
+          ],
         ),
       ),
-      body: opinionsAsync.when(
-        data: (opinions) {
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _buildFeed(opinions),
-              _buildFeed(opinions.where((o) => o.isCooking).toList()),
-              // Just reversing the stream array for 'Latest' isn't perfect, but works for now.
-              // In a real app we would have a separate query, but 'created_at' desc is already Latest.
-              _buildFeed(opinions.toList()), 
-            ],
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
-      ),
+    );
+  }
+
+  Widget _buildTab(AsyncValue opinionsAsync, List Function(List) filter) {
+    return opinionsAsync.when(
+      data: (opinions) => _buildFeed(filter(opinions as List)),
+      loading: () => const Center(child: VideoLoader()),
+      error: (err, stack) => Center(child: Text('Error: $err')),
     );
   }
 
   Widget _buildFeed(List opinions) {
     if (opinions.isEmpty) {
-      return RefreshIndicator(
+      return VideoRefreshIndicator(
         onRefresh: () async {
           ref.invalidate(feedOpinionsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
@@ -124,7 +165,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       );
     }
 
-    return RefreshIndicator(
+    return VideoRefreshIndicator(
       onRefresh: () async {
         ref.invalidate(feedOpinionsProvider);
         await Future.delayed(const Duration(milliseconds: 500));

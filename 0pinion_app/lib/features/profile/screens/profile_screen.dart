@@ -1,3 +1,5 @@
+import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
+import 'package:opinion_app/core/widgets/video_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
@@ -40,6 +42,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     final user = ref.watch(currentUserProvider);
+    final profileAsync = ref.watch(userProfileDetailsProvider);
+    final statsAsync = ref.watch(profileStatsProvider);
+    final profile = profileAsync.value;
+    final stats = statsAsync.value ?? {'opinions': 0, 'arguments': 0, 'zeroes': 0, 'reputation': 0};
 
     return Scaffold(
       appBar: AppBar(
@@ -65,18 +71,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
-                      // We don't have the user's avatar_seed or display_name loaded into currentUserProvider easily
-                      // because currentUserProvider only returns GoTrue User object.
-                      // For now, we'll just show the email as a fallback.
-                      AvatarWidget(seed: user.id.hashCode, size: 80),
+                      AvatarWidget(
+                        seed: profile?['avatar_seed'] as int? ?? user.id.hashCode,
+                        size: 80,
+                      ),
                       const SizedBox(height: 16),
                       Text(
-                        user.email ?? 'Unknown User',
+                        profile?['display_name'] as String? ?? user.email ?? 'Unknown User',
                         style: AppTypography.h3(color: primaryText),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '@user_${user.id.substring(0, 4)}',
+                        profile?['username'] != null 
+                            ? '@${profile!['username']}' 
+                            : '@user_${user.id.substring(0, 4)}',
                         style: AppTypography.body(color: secondaryText),
                       ),
                       const SizedBox(height: 20),
@@ -89,7 +97,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                           border: Border.all(color: borderColor),
                         ),
                         child: Text(
-                          'Reputation: 0',
+                          'Reputation: ${stats['reputation'] ?? 0}',
                           style: AppTypography.bodySemiBold(color: primaryText),
                         ),
                       ),
@@ -99,11 +107,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: [
-                          _StatItem(value: '0', label: 'Opinions'),
+                          _StatItem(value: '${stats['opinions'] ?? 0}', label: 'Opinions'),
                           Container(width: 1, height: 32, color: borderColor),
-                          _StatItem(value: '0', label: 'Debates'),
+                          _StatItem(value: '${stats['arguments'] ?? 0}', label: 'Debates'),
                           Container(width: 1, height: 32, color: borderColor),
-                          _StatItem(value: '0', label: 'Zeroes'),
+                          _StatItem(value: '${stats['zeroes'] ?? 0}', label: 'Zeroes'),
                         ],
                       ),
                     ],
@@ -144,9 +152,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       data: (opinions) {
         final userOpinions = opinions.where((o) => o.authorId == userId).toList();
         if (userOpinions.isEmpty) {
-          return RefreshIndicator(
+          return VideoRefreshIndicator(
             onRefresh: () async {
               ref.invalidate(feedOpinionsProvider);
+              ref.invalidate(profileStatsProvider);
+              ref.invalidate(userProfileDetailsProvider);
               await Future.delayed(const Duration(milliseconds: 500));
             },
             child: ListView(
@@ -160,9 +170,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ),
           );
         }
-        return RefreshIndicator(
+        return VideoRefreshIndicator(
           onRefresh: () async {
             ref.invalidate(feedOpinionsProvider);
+            ref.invalidate(profileStatsProvider);
+            ref.invalidate(userProfileDetailsProvider);
             await Future.delayed(const Duration(milliseconds: 500));
           },
           child: ListView.separated(
@@ -171,71 +183,250 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             itemCount: userOpinions.length,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
-            final op = userOpinions[index];
-            return Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
+              final op = userOpinions[index];
+              return InkWell(
+                onTap: () => context.push('/opinion/${op.id}'),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: borderColor),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(op.title, style: AppTypography.bodyMedium(color: primaryText)),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${op.totalDebates} debates',
-                    style: AppTypography.caption(color: secondaryText),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: borderColor),
                   ),
-                ],
-              ),
-            );
-          },
-        ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(op.title, style: AppTypography.bodyMedium(color: primaryText)),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${op.totalDebates} debates',
+                        style: AppTypography.caption(color: secondaryText),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         );
       },
-      loading: () => const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: VideoLoader()),
       error: (e, _) => Center(child: Text('Error loading opinions', style: AppTypography.body(color: secondaryText))),
     );
   }
 
   Widget _buildArgumentsTab(Color primaryText, Color secondaryText, Color borderColor) {
-    return RefreshIndicator(
-      onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          SizedBox(
-            height: 200,
-            child: Center(
-              child: Text(
-                'Your arguments will appear here',
-                style: AppTypography.body(color: secondaryText),
-              ),
+    final argumentsAsync = ref.watch(userArgumentsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return argumentsAsync.when(
+      data: (arguments) {
+        if (arguments.isEmpty) {
+          return VideoRefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(userArgumentsProvider);
+              ref.invalidate(profileStatsProvider);
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: 200,
+                  child: Center(
+                    child: Text(
+                      'Your arguments will appear here',
+                      style: AppTypography.body(color: secondaryText),
+                    ),
+                  ),
+                ),
+              ],
             ),
+          );
+        }
+
+        return VideoRefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(userArgumentsProvider);
+            ref.invalidate(profileStatsProvider);
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            itemCount: arguments.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final arg = arguments[index];
+              final type = arg['type'] as String? ?? 'question';
+              final content = arg['content'] as String? ?? '';
+              final opinionId = arg['opinion_id'] as String? ?? '';
+              final opinionTitle = arg['opinions']?['title'] as String? ?? 'Opinion';
+
+              final isSupport = type == 'support';
+              final isOppose = type == 'oppose';
+              final badgeBg = isSupport ? primaryText : Colors.transparent;
+              final badgeTextColor = isSupport 
+                  ? (isDark ? AppColors.black : AppColors.white)
+                  : primaryText;
+              final badgeBorder = isSupport 
+                  ? Border.all(color: primaryText)
+                  : (isOppose 
+                      ? Border.all(color: primaryText, width: 1.5)
+                      : Border.all(color: borderColor));
+
+              return InkWell(
+                onTap: () {
+                  if (opinionId.isNotEmpty) {
+                    context.push('/opinion/$opinionId');
+                  }
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: badgeBg,
+                              borderRadius: BorderRadius.circular(6),
+                              border: badgeBorder,
+                            ),
+                            child: Text(
+                              type.toUpperCase(),
+                              style: AppTypography.label(color: badgeTextColor),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'on "$opinionTitle"',
+                              style: AppTypography.caption(color: secondaryText),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        content,
+                        style: AppTypography.bodyMedium(color: primaryText),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
-        ],
-      ),
+        );
+      },
+      loading: () => const Center(child: VideoLoader()),
+      error: (e, _) => Center(child: Text('Error loading arguments', style: AppTypography.body(color: secondaryText))),
     );
   }
 
   Widget _buildZeroesTab(Color primaryText, Color secondaryText, Color borderColor) {
-    return RefreshIndicator(
-      onRefresh: () async => await Future.delayed(const Duration(milliseconds: 500)),
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          SizedBox(
-            height: 200,
-            child: Center(
-              child: Text(
-                'Your joined zeroes will appear here',
-                style: AppTypography.body(color: secondaryText),
-              ),
+    final zeroesAsync = ref.watch(userZeroesProvider);
+
+    return zeroesAsync.when(
+      data: (zeroes) {
+        if (zeroes.isEmpty) {
+          return VideoRefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(userZeroesProvider);
+              ref.invalidate(profileStatsProvider);
+              await Future.delayed(const Duration(milliseconds: 500));
+            },
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                SizedBox(
+                  height: 200,
+                  child: Center(
+                    child: Text(
+                      'Your zeroes will appear here',
+                      style: AppTypography.body(color: secondaryText),
+                    ),
+                  ),
+                ),
+              ],
             ),
+          );
+        }
+
+        return VideoRefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(userZeroesProvider);
+            ref.invalidate(profileStatsProvider);
+            await Future.delayed(const Duration(milliseconds: 500));
+          },
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            itemCount: zeroes.length,
+            separatorBuilder: (_, _) => const SizedBox(height: 8),
+            itemBuilder: (context, index) {
+              final zero = zeroes[index];
+              final name = zero['name'] as String? ?? '';
+              final description = zero['description'] as String? ?? '';
+              final opinionsCount = zero['opinions_count'] as int? ?? 0;
+
+              return InkWell(
+                onTap: () {
+                  context.push('/zeroes');
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            name,
+                            style: AppTypography.bodySemiBold(color: primaryText),
+                          ),
+                          Text(
+                            '$opinionsCount opinions',
+                            style: AppTypography.caption(color: secondaryText),
+                          ),
+                        ],
+                      ),
+                      if (description.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          description,
+                          style: AppTypography.caption(color: secondaryText),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
-        ],
-      ),
+        );
+      },
+      loading: () => const Center(child: VideoLoader()),
+      error: (e, _) => Center(child: Text('Error loading zeroes', style: AppTypography.body(color: secondaryText))),
     );
   }
 }

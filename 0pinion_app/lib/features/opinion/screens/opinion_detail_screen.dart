@@ -1,3 +1,5 @@
+import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
+import 'package:opinion_app/core/widgets/video_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -58,7 +60,7 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
         ],
       ),
       body: opinionsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: VideoLoader()),
         error: (e, st) => Center(child: Text('Error: $e')),
         data: (opinions) {
           if (opinions.isEmpty) {
@@ -78,7 +80,7 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
 
           final arguments = argumentsAsync.value ?? <Argument>[];
 
-          return RefreshIndicator(
+          return VideoRefreshIndicator(
             onRefresh: () async {
               ref.invalidate(opinionArgumentsProvider(widget.opinionId));
               await Future.delayed(const Duration(milliseconds: 500));
