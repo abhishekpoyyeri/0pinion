@@ -1,5 +1,5 @@
-import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
-import 'package:opinion_app/core/widgets/video_loader.dart';
+import 'package:opinion_app/core/widgets/animated_refresh_widget.dart';
+import 'package:opinion_app/core/widgets/loading_gif_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,7 +11,7 @@ import '../../../data/models/argument.dart';
 import '../../../core/providers/opinion_provider.dart';
 import '../../../core/providers/argument_provider.dart';
 
-/// Opinion Detail screen — full opinion + debate zone
+/// Opinion Detail screen â€” full opinion + debate zone
 class OpinionDetailScreen extends ConsumerStatefulWidget {
   final String opinionId;
 
@@ -61,8 +61,7 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
       ),
       body: opinionsAsync.when(
         skipLoadingOnRefresh: true,
-        loading: () => const Center(child: VideoLoader()),
-        error: (e, st) => Center(child: Text('Error: $e')),
+        loading: () => const Center(child: LoadingGifWidget()),        error: (e, st) => Center(child: Text('Error: $e')),
         data: (opinions) {
           if (opinions.isEmpty) {
             return const Center(child: Text('Opinion not found'));
@@ -81,7 +80,7 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
 
           final arguments = argumentsAsync.value ?? <Argument>[];
 
-          return VideoRefreshIndicator(
+          return AnimatedRefreshWidget(
             onRefresh: () async {
               ref.invalidate(opinionArgumentsProvider(widget.opinionId));
               await Future.delayed(const Duration(milliseconds: 500));

@@ -1,4 +1,4 @@
-import 'package:opinion_app/core/widgets/video_loader.dart';
+import 'package:opinion_app/core/widgets/loading_gif_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -8,7 +8,7 @@ import '../../../core/utils/error_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/repositories/auth_repository.dart';
 
-/// Sign Up screen — Email/Password form + Google auth
+/// Sign Up screen â€” Email/Password form + Google auth
 class SignUpScreen extends ConsumerStatefulWidget {
   final bool isLogin;
   
@@ -194,7 +194,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
               // Sign Up button
               _isLoading
-                  ? const Center(child: VideoLoader())
+                  ? const Center(child: LoadingGifWidget())
                   : PrimaryButton(
                       label: _isLogin ? 'Log In' : 'Sign Up',
                       onPressed: _submit,

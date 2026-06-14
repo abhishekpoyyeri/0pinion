@@ -92,6 +92,7 @@ class CommunityRepository {
     required String name,
     required String description,
     required List<String> zeroIds,
+    bool isPrivate = false,
   }) async {
     final userId = _supabase.auth.currentUser!.id;
 
@@ -102,6 +103,7 @@ class CommunityRepository {
           'name': name,
           'description': description,
           'creator_id': userId,
+          'is_private': isPrivate,
         })
         .select()
         .single();
@@ -217,5 +219,54 @@ class CommunityRepository {
         .ilike('name', name)
         .maybeSingle();
     return res == null;
+  }
+
+  // --- INVITE METHODS ---
+
+  /// Send an invite to a user
+  Future<void> sendInvite({required String communityId, required String inviteeId}) async {
+    final userId = _supabase.auth.currentUser!.id;
+    await _supabase.from('community_invites').insert({
+      'community_id': communityId,
+      'inviter_id': userId,
+      'invitee_id': inviteeId,
+    });
+  }
+
+  /// Accept an invite
+  Future<void> acceptInvite(String inviteId, String communityId) async {
+    final userId = _supabase.auth.currentUser!.id;
+    // Update invite status
+    await _supabase.from('community_invites').update({'status': 'accepted'}).eq('id', inviteId);
+    // Add member
+    await _supabase.from('community_members').insert({
+      'community_id': communityId,
+      'user_id': userId,
+      'role': 'member',
+    });
+  }
+
+  /// Fetch pending invites for current user
+  Future<List<Map<String, dynamic>>> fetchPendingInvites() async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return [];
+    
+    final res = await _supabase
+        .from('community_invites')
+        .select('*, communities(*), profiles!community_invites_inviter_id_fkey(username, display_name)')
+        .eq('invitee_id', userId)
+        .eq('status', 'pending')
+        .order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(res);
+  }
+
+  /// Find user ID by username
+  Future<String?> findUserByUsername(String username) async {
+    final res = await _supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username)
+        .maybeSingle();
+    return res?['id'] as String?;
   }
 }

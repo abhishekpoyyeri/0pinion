@@ -5,7 +5,7 @@ import 'dart:ui';
 class AppColors {
   AppColors._();
 
-  // ─── Light Mode ───
+  // â”€â”€â”€ Light Mode â”€â”€â”€
   static const Color lightBackground = Color(0xFFFFFFFF);
   static const Color lightSurface = Color(0xFFFAFAFA);
   static const Color lightPrimaryText = Color(0xFF000000);
@@ -13,7 +13,7 @@ class AppColors {
   static const Color lightBorder = Color(0xFFE5E5E5);
   static const Color lightDisabled = Color(0xFFCCCCCC);
 
-  // ─── Dark Mode ───
+  // â”€â”€â”€ Dark Mode â”€â”€â”€
   static const Color darkBackground = Color(0xFF000000);
   static const Color darkSurface = Color(0xFF111111);
   static const Color darkPrimaryText = Color(0xFFFFFFFF);
@@ -21,7 +21,7 @@ class AppColors {
   static const Color darkBorder = Color(0xFF333333);
   static const Color darkDisabled = Color(0xFF555555);
 
-  // ─── Shared ───
+  // â”€â”€â”€ Shared â”€â”€â”€
   static const Color black = Color(0xFF000000);
   static const Color white = Color(0xFFFFFFFF);
   static const Color transparent = Color(0x00000000);

@@ -185,6 +185,7 @@ CREATE TABLE public.communities (
     avatar_seed INTEGER NOT NULL DEFAULT floor(random() * 100000)::int,
     member_count INTEGER NOT NULL DEFAULT 1,
     post_count INTEGER NOT NULL DEFAULT 0,
+    is_private BOOLEAN NOT NULL DEFAULT false,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -214,6 +215,17 @@ CREATE TABLE public.community_posts (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Community Invites
+CREATE TABLE public.community_invites (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    community_id UUID NOT NULL REFERENCES public.communities(id) ON DELETE CASCADE,
+    inviter_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    invitee_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE(community_id, invitee_id)
+);
+
 -------------------------------------------------------------------
 -- COMMUNITY RLS
 -------------------------------------------------------------------
@@ -222,9 +234,17 @@ ALTER TABLE public.communities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.community_zeroes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.community_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.community_posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.community_invites ENABLE ROW LEVEL SECURITY;
 
--- Communities: public read, authenticated create, creator update/delete
-CREATE POLICY "Communities viewable by everyone" ON public.communities FOR SELECT USING (true);
+-- Communities: public read if not private, members/invitees read if private
+CREATE POLICY "Public communities viewable by everyone" ON public.communities FOR SELECT USING (is_private = false);
+CREATE POLICY "Private communities viewable by members and invited" ON public.communities FOR SELECT USING (
+    is_private = true AND (
+        creator_id = auth.uid() OR
+        id IN (SELECT community_id FROM public.community_members WHERE user_id = auth.uid()) OR
+        id IN (SELECT community_id FROM public.community_invites WHERE invitee_id = auth.uid())
+    )
+);
 CREATE POLICY "Users can create communities" ON public.communities FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = creator_id);
 CREATE POLICY "Creators can update communities" ON public.communities FOR UPDATE TO authenticated USING ((select auth.uid()) = creator_id) WITH CHECK ((select auth.uid()) = creator_id);
 CREATE POLICY "Creators can delete communities" ON public.communities FOR DELETE TO authenticated USING ((select auth.uid()) = creator_id);
@@ -243,6 +263,22 @@ CREATE POLICY "Users can leave communities" ON public.community_members FOR DELE
 CREATE POLICY "Community posts viewable by everyone" ON public.community_posts FOR SELECT USING (true);
 CREATE POLICY "Members can create posts" ON public.community_posts FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = author_id);
 CREATE POLICY "Authors can delete own posts" ON public.community_posts FOR DELETE TO authenticated USING ((select auth.uid()) = author_id);
+
+-- Invites: users can view invites sent to them, or invites they sent, or invites for communities they admin
+CREATE POLICY "Users view relevant invites" ON public.community_invites FOR SELECT USING (
+    invitee_id = auth.uid() OR 
+    inviter_id = auth.uid() OR
+    community_id IN (SELECT community_id FROM public.community_members WHERE user_id = auth.uid() AND role IN ('admin', 'moderator'))
+);
+CREATE POLICY "Admins can invite" ON public.community_invites FOR INSERT TO authenticated WITH CHECK (
+    inviter_id = auth.uid() AND
+    community_id IN (SELECT community_id FROM public.community_members WHERE user_id = auth.uid() AND role IN ('admin', 'moderator'))
+);
+CREATE POLICY "Invitees can update their invites" ON public.community_invites FOR UPDATE TO authenticated USING (invitee_id = auth.uid()) WITH CHECK (invitee_id = auth.uid());
+CREATE POLICY "Admins can delete invites" ON public.community_invites FOR DELETE TO authenticated USING (
+    inviter_id = auth.uid() OR
+    community_id IN (SELECT community_id FROM public.community_members WHERE user_id = auth.uid() AND role IN ('admin', 'moderator'))
+);
 
 -------------------------------------------------------------------
 -- COMMUNITY TRIGGERS

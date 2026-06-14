@@ -4,7 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/primary_button.dart';
 
-/// Report screen — flag content with reason
+/// Report screen â€” flag content with reason
 class ReportScreen extends StatefulWidget {
   final String contentType;
   final String contentId;

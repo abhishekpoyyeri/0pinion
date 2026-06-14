@@ -1,4 +1,4 @@
-import 'package:opinion_app/core/widgets/video_loader.dart';
+import 'package:opinion_app/core/widgets/loading_gif_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -118,7 +118,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   if (ref.watch(authStateProvider).isLoading || !ref.watch(authStateProvider).hasValue)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 24.0),
-                      child: VideoLoader(),
+                      child: LoadingGifWidget(),
                     )
                   else ...[
                     PrimaryButton(

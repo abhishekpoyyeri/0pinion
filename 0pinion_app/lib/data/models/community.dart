@@ -7,6 +7,7 @@ class Community {
   final int memberCount;
   final int postCount;
   final List<String> zeroes;
+  final bool isPrivate;
   final bool isMember;
   final DateTime createdAt;
 
@@ -19,12 +20,13 @@ class Community {
     this.memberCount = 1,
     this.postCount = 0,
     this.zeroes = const [],
+    this.isPrivate = false,
     this.isMember = false,
     required this.createdAt,
   });
 
   factory Community.fromJson(Map<String, dynamic> json, {bool isMember = false}) {
-    // Parse zeroes from the joined community_zeroes → zeroes relation
+    // Parse zeroes from the joined community_zeroes â†’ zeroes relation
     List<String> zeroNames = [];
     if (json['community_zeroes'] != null) {
       final czList = json['community_zeroes'] as List;
@@ -43,6 +45,7 @@ class Community {
       avatarSeed: json['avatar_seed'] as int? ?? 0,
       memberCount: json['member_count'] as int? ?? 1,
       postCount: json['post_count'] as int? ?? 0,
+      isPrivate: json['is_private'] as bool? ?? false,
       zeroes: zeroNames,
       isMember: isMember,
       createdAt: DateTime.parse(json['created_at'] as String),
@@ -57,6 +60,7 @@ class Community {
     int? avatarSeed,
     int? memberCount,
     int? postCount,
+    bool? isPrivate,
     List<String>? zeroes,
     bool? isMember,
     DateTime? createdAt,
@@ -69,6 +73,7 @@ class Community {
       avatarSeed: avatarSeed ?? this.avatarSeed,
       memberCount: memberCount ?? this.memberCount,
       postCount: postCount ?? this.postCount,
+      isPrivate: isPrivate ?? this.isPrivate,
       zeroes: zeroes ?? this.zeroes,
       isMember: isMember ?? this.isMember,
       createdAt: createdAt ?? this.createdAt,

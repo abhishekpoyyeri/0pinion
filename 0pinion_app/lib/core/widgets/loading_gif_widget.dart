@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class VideoLoader extends StatelessWidget {
+class LoadingGifWidget extends StatelessWidget {
   final double width;
   final double height;
 
-  const VideoLoader({
+  const LoadingGifWidget({
     super.key,
     this.width = 120,
     this.height = 120,

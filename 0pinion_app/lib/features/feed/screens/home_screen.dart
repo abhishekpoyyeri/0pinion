@@ -1,7 +1,5 @@
-import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
-import 'package:opinion_app/core/widgets/video_loader.dart';
-import 'package:opinion_app/core/widgets/keep_alive_wrapper.dart';
-import 'package:flutter/material.dart';
+import 'package:opinion_app/core/widgets/animated_refresh_widget.dart';
+import 'package:opinion_app/core/widgets/loading_gif_widget.dart';import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -10,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/opinion_provider.dart';
 import '../../../data/repositories/live_room_repository.dart';
 
-/// Home screen — For You / Cooking / Latest tabs with opinion feed
+/// Home screen â€” For You / Cooking / Latest tabs with opinion feed
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
@@ -122,8 +120,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return opinionsAsync.when(
       skipLoadingOnRefresh: true,
       data: (opinions) => _buildFeed(filter(opinions as List), tabKey),
-      loading: () => const Center(child: VideoLoader()),
-      error: (err, stack) => VideoRefreshIndicator(
+      loading: () => const Center(child: LoadingGifWidget()),
+      error: (err, stack) => AnimatedRefreshWidget(
         onRefresh: () async {
           ref.invalidate(feedOpinionsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
@@ -176,8 +174,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final cookingAsync = ref.watch(cookingOpinionsProvider);
     return cookingAsync.when(
       data: (opinions) => _buildFeed(opinions, 'cooking'),
-      loading: () => const Center(child: VideoLoader()),
-      error: (err, stack) => VideoRefreshIndicator(
+      loading: () => const Center(child: LoadingGifWidget()),
+      error: (err, stack) => AnimatedRefreshWidget(
         onRefresh: () async {
           ref.invalidate(feedOpinionsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
@@ -207,7 +205,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Widget _buildFeed(List opinions, String tabKey) {
     if (opinions.isEmpty) {
-      return VideoRefreshIndicator(
+      return AnimatedRefreshWidget(
         onRefresh: () async {
           ref.invalidate(feedOpinionsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
@@ -247,7 +245,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       );
     }
 
-    return VideoRefreshIndicator(
+    return AnimatedRefreshWidget(
       onRefresh: () async {
         ref.invalidate(feedOpinionsProvider);
         await Future.delayed(const Duration(milliseconds: 500));
@@ -280,9 +278,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return roomsAsync.when(
       skipLoadingOnRefresh: true,
-      loading: () => const Center(child: VideoLoader()),
-      error: (err, _) => VideoRefreshIndicator(
-        onRefresh: () async {
+      loading: () => const Center(child: LoadingGifWidget()),
+      error: (err, _) => AnimatedRefreshWidget(        onRefresh: () async {
           ref.invalidate(liveRoomsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
         },
@@ -302,7 +299,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
       data: (rooms) {
         if (rooms.isEmpty) {
-          return VideoRefreshIndicator(
+          return AnimatedRefreshWidget(
             onRefresh: () async {
               ref.invalidate(liveRoomsProvider);
               await Future.delayed(const Duration(milliseconds: 500));
@@ -333,7 +330,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           );
         }
 
-        return VideoRefreshIndicator(
+        return AnimatedRefreshWidget(
           onRefresh: () async {
             ref.invalidate(liveRoomsProvider);
             await Future.delayed(const Duration(milliseconds: 500));

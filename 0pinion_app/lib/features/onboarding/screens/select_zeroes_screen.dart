@@ -6,7 +6,7 @@ import '../../../core/widgets/primary_button.dart';
 import '../../../core/widgets/zero_chip.dart';
 
 
-/// Select Zeroes screen — choose interest communities
+/// Select Zeroes screen â€” choose interest communities
 class SelectZeroesScreen extends StatefulWidget {
   const SelectZeroesScreen({super.key});
 

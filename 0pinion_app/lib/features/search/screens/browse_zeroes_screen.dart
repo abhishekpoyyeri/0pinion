@@ -4,7 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 
 
-/// Browse Zeroes screen — full directory of topic communities
+/// Browse Zeroes screen â€” full directory of topic communities
 class BrowseZeroesScreen extends StatelessWidget {
   const BrowseZeroesScreen({super.key});
 

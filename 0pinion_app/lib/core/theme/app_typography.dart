@@ -7,7 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTypography {
   AppTypography._();
 
-  // ─── Headlines (Space Grotesk) ───
+  // â”€â”€â”€ Headlines (Space Grotesk) â”€â”€â”€
 
   static TextStyle display({Color? color}) => GoogleFonts.spaceGrotesk(
         fontSize: 48,
@@ -39,7 +39,7 @@ class AppTypography {
         height: 1.3,
       );
 
-  // ─── Body (Geist) ───
+  // â”€â”€â”€ Body (Geist) â”€â”€â”€
 
   static TextStyle body({Color? color}) => GoogleFonts.inter(
         fontSize: 16,
@@ -62,7 +62,7 @@ class AppTypography {
         height: 1.5,
       );
 
-  // ─── Captions & Labels ───
+  // â”€â”€â”€ Captions & Labels â”€â”€â”€
 
   static TextStyle caption({Color? color}) => GoogleFonts.inter(
         fontSize: 14,
