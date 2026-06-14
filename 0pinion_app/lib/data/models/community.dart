@@ -37,13 +37,16 @@ class Community {
       }
     }
 
+    final rawMemberCount = json['member_count'] as int? ?? 1;
+    final displayMemberCount = rawMemberCount > 1 ? rawMemberCount - 1 : 0;
+
     return Community(
       id: json['id'] as String,
       name: json['name'] as String,
       description: json['description'] as String? ?? '',
       creatorId: json['creator_id'] as String,
       avatarSeed: json['avatar_seed'] as int? ?? 0,
-      memberCount: json['member_count'] as int? ?? 1,
+      memberCount: displayMemberCount,
       postCount: json['post_count'] as int? ?? 0,
       isPrivate: json['is_private'] as bool? ?? false,
       zeroes: zeroNames,

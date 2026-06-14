@@ -46,6 +46,32 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
   }
 
   Future<void> _toggleMembership(bool isMember) async {
+    if (isMember) {
+      final communityAsync = ref.read(communityDetailProvider(widget.communityId));
+      final community = communityAsync.value;
+      if (community != null) {
+        final currentUserId = ref.read(supabaseClientProvider).auth.currentUser?.id;
+        final isCreator = community.creatorId == currentUserId;
+
+        if (isCreator) {
+          final membersAsync = ref.read(communityMembersProvider(widget.communityId));
+          final members = membersAsync.value ?? [];
+
+          if (members.length > 1) {
+            AppErrorHandler.showErrorDialog(
+              context, 
+              'You are the admin of this community. Please transfer admin controls to someone else before leaving.'
+            );
+            return;
+          } else {
+            // Admin is the only member left
+            _confirmDeleteCommunity(community.name);
+            return;
+          }
+        }
+      }
+    }
+
     final repo = ref.read(communityRepositoryProvider);
     try {
       if (isMember) {
@@ -179,7 +205,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
                             Text(community.name, style: AppTypography.h3(color: primaryText)),
                             const SizedBox(height: 4),
                             Text(
-                              '${community.memberCount} members • ${community.postCount} posts',
+                              '${community.memberCount} member${community.memberCount == 1 ? '' : 's'} • ${community.postCount} post${community.postCount == 1 ? '' : 's'}',
                               style: AppTypography.caption(color: secondaryText),
                             ),
                           ],
@@ -690,7 +716,7 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(displayName, style: AppTypography.bodyMedium(color: primaryText)),
-                                      Text('@', style: AppTypography.caption(color: secondaryText)),
+                                      Text('@$username', style: AppTypography.caption(color: secondaryText)),
                                     ],
                                   ),
                                 ),
@@ -765,41 +791,51 @@ class _MembersTabState extends ConsumerState<_MembersTab> {
                         final avatarSeed = profile?['avatar_seed'] as int? ?? 0;
                         final role = member['role'] as String? ?? 'member';
 
+                        final userId = member['user_id'] as String;
+
                         return Column(
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Row(
-                                children: [
-                                  AvatarWidget(seed: avatarSeed, size: 36),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(displayName, style: AppTypography.bodyMedium(color: primaryText)),
-                                        Text('@', style: AppTypography.caption(color: secondaryText)),
-                                      ],
-                                    ),
-                                  ),
-                                  if (role != 'member')
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: role == 'admin' ? primaryText : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(color: primaryText),
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onLongPress: () {
+                                if (widget.isCreator && role != 'admin') {
+                                  _showTransferAdminDialog(context, userId, displayName, username);
+                                }
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                child: Row(
+                                  children: [
+                                    AvatarWidget(seed: avatarSeed, size: 36),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(displayName, style: AppTypography.bodyMedium(color: primaryText)),
+                                          Text('@$username', style: AppTypography.caption(color: secondaryText)),
+                                        ],
                                       ),
-                                      child: Text(
-                                        role.toUpperCase(),
-                                        style: AppTypography.label(
-                                          color: role == 'admin'
-                                              ? (isDark ? AppColors.black : AppColors.white)
-                                              : primaryText,
+                                    ),
+                                    if (role != 'member')
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: role == 'admin' ? primaryText : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: primaryText),
+                                        ),
+                                        child: Text(
+                                          role.toUpperCase(),
+                                          style: AppTypography.label(
+                                            color: role == 'admin'
+                                                ? (isDark ? AppColors.black : AppColors.white)
+                                                : primaryText,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                             if (index < members.length - 1)
@@ -815,6 +851,50 @@ class _MembersTabState extends ConsumerState<_MembersTab> {
           ),
         );
       },
+    );
+  }
+
+  void _showTransferAdminDialog(BuildContext context, String newAdminId, String displayName, String username) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
+    final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Theme.of(ctx).scaffoldBackgroundColor,
+        title: Text('Make Admin?', style: AppTypography.h3(color: primaryText)),
+        content: Text(
+          'Are you sure you want to transfer your admin rights to $displayName (@$username)? You will lose your admin status and become a regular member.',
+          style: AppTypography.body(color: secondaryText),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: AppTypography.bodySemiBold(color: secondaryText)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                final repo = ref.read(communityRepositoryProvider);
+                await repo.transferAdmin(
+                  communityId: widget.communityId,
+                  newAdminId: newAdminId,
+                );
+                ref.invalidate(communityDetailProvider(widget.communityId));
+                ref.invalidate(communityMembersProvider(widget.communityId));
+                ref.invalidate(communitiesProvider);
+              } catch (e) {
+                if (context.mounted) {
+                  AppErrorHandler.showErrorDialog(context, e);
+                }
+              }
+            },
+            child: Text('Transfer', style: AppTypography.bodySemiBold(color: primaryText)),
+          ),
+        ],
+      ),
     );
   }
 }

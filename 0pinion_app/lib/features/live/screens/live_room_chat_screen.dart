@@ -462,11 +462,16 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  _roomStatus == 'active'
-                      ? '$_presenceCount online  Â·  ${_formatDuration(_remaining)} left'
-                      : 'CLOSED',
-                  style: AppTypography.caption(color: secondaryText),
+                Builder(
+                  builder: (context) {
+                    final displayCount = _presenceCount > 1 ? _presenceCount - 1 : 0;
+                    return Text(
+                      _roomStatus == 'active'
+                          ? '$displayCount online  ·  ${_formatDuration(_remaining)} left'
+                          : 'CLOSED',
+                      style: AppTypography.caption(color: secondaryText),
+                    );
+                  }
                 ),
               ],
             ),

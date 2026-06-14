@@ -36,40 +36,44 @@ class _MainScreenState extends State<MainScreen> {
   void _onTabTapped(int index) {
     if (index == _currentIndex) return;
     
-    // Jump to page if it's too far away, otherwise animate
-    if ((index - _currentIndex).abs() > 1) {
-      _pageController.jumpToPage(index);
-    } else {
-      _pageController.animateToPage(
-        index,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBody: true,
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        children: const [
-          KeepAliveWrapper(child: HomeScreen()),
-          KeepAliveWrapper(child: SearchScreen()),
-          KeepAliveWrapper(child: CreateOpinionScreen()),
-          KeepAliveWrapper(child: CommunitiesScreen()),
-          KeepAliveWrapper(child: ProfileScreen()),
-        ],
-      ),
-      bottomNavigationBar: CustomNavigationDock(
-        selectedIndex: _currentIndex,
-        onTap: _onTabTapped,
+    return PopScope(
+      canPop: _currentIndex == 0,
+      onPopInvokedWithResult: (didPop, dynamic result) {
+        if (didPop) return;
+        if (_currentIndex != 0) {
+          _onTabTapped(0);
+        }
+      },
+      child: Scaffold(
+        extendBody: true,
+        body: PageView(
+          controller: _pageController,
+          onPageChanged: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          children: const [
+            KeepAliveWrapper(child: HomeScreen()),
+            KeepAliveWrapper(child: SearchScreen()),
+            KeepAliveWrapper(child: CreateOpinionScreen()),
+            KeepAliveWrapper(child: CommunitiesScreen()),
+            KeepAliveWrapper(child: ProfileScreen()),
+          ],
+        ),
+        bottomNavigationBar: CustomNavigationDock(
+          selectedIndex: _currentIndex,
+          onTap: _onTabTapped,
+        ),
       ),
     );
   }

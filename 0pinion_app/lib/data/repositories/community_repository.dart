@@ -149,6 +149,17 @@ class CommunityRepository {
         .eq('user_id', userId);
   }
 
+  /// Transfer admin rights to another member
+  Future<void> transferAdmin({
+    required String communityId,
+    required String newAdminId,
+  }) async {
+    await _supabase.rpc('transfer_admin', params: {
+      'p_community_id': communityId,
+      'p_new_admin_id': newAdminId,
+    });
+  }
+
   /// Create a post in a community
   Future<void> createPost({
     required String communityId,

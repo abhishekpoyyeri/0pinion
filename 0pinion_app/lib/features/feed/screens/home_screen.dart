@@ -361,7 +361,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               final roomId = room['id'] as String;
               final title = room['title'] as String? ?? 'Untitled';
               final topic = room['topic'] as String? ?? '';
-              final participantCount = room['participant_count'] as int? ?? 1;
+              final rawCount = room['participant_count'] as int? ?? 1;
+              final participantCount = rawCount > 1 ? rawCount - 1 : 0;
 
               final profileData = room['profiles'];
               final hostUsername = profileData != null && profileData is Map
@@ -497,7 +498,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 size: 16, color: secondaryText),
                             const SizedBox(width: 4),
                             Text(
-                              '$participantCount participants',
+                              '$participantCount participant${participantCount == 1 ? '' : 's'}',
                               style: AppTypography.caption(
                                   color: secondaryText),
                             ),
