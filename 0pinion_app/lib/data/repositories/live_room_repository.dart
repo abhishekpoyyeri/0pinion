@@ -45,12 +45,12 @@ class LiveRoomRepository {
                   .update({
                     'status': 'closed',
                     'closed_at': DateTime.now().toUtc().toIso8601String(),
-                    'conclusion': 'Room timed out — no conclusion was provided.',
+                    'conclusion': 'Room timed out â€” no conclusion was provided.',
                   })
                   .eq('id', room['id']);
               room['status'] = 'closed';
               room['closed_at'] = DateTime.now().toUtc().toIso8601String();
-              room['conclusion'] = 'Room timed out — no conclusion was provided.';
+              room['conclusion'] = 'Room timed out â€” no conclusion was provided.';
             } catch (_) {
               // If we can't update (not host), just mark locally
               room['status'] = 'closed';
@@ -136,7 +136,7 @@ class LiveRoomRepository {
           .eq('status', 'closed')
           .lt('closed_at', cutoff.toIso8601String());
     } catch (_) {
-      // Silent fail — user might not be the host of expired rooms
+      // Silent fail â€” user might not be the host of expired rooms
     }
   }
 

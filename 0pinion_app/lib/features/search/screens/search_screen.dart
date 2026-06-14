@@ -10,8 +10,8 @@ import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/providers/supabase_provider.dart';
 import '../../../data/models/opinion.dart';
 
-/// Search screen — unified search with smart prefixes
-/// @username → users, 0topic → zeroes/opinions, default → opinions
+/// Search screen â€” unified search with smart prefixes
+/// @username â†’ users, 0topic â†’ zeroes/opinions, default â†’ opinions
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
 
@@ -130,7 +130,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     try {
       if (query.startsWith('@')) {
-        // ─── USER SEARCH ───
+        // â”€â”€â”€ USER SEARCH â”€â”€â”€
         final username = query.substring(1).trim().toLowerCase();
         _searchMode = 'users';
         if (username.isEmpty) {
@@ -146,7 +146,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         _opinionResults = [];
         _zeroResults = [];
       } else if (query.startsWith('0')) {
-        // ─── ZERO SEARCH ───
+        // â”€â”€â”€ ZERO SEARCH â”€â”€â”€
         final zeroName = query.substring(1).trim().toLowerCase();
         _searchMode = 'zeroes';
         if (zeroName.isEmpty) {
@@ -184,7 +184,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         }
         _userResults = [];
       } else {
-        // ─── GENERAL SEARCH (opinions by title/content) ───
+        // â”€â”€â”€ GENERAL SEARCH (opinions by title/content) â”€â”€â”€
         _searchMode = 'all';
         final searchTerm = query.trim().toLowerCase();
 
@@ -384,7 +384,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        // ─── Users Section ───
+        // â”€â”€â”€ Users Section â”€â”€â”€
         if (_userResults.isNotEmpty) ...[
           Text('Users', style: AppTypography.captionMedium(color: secondaryText)),
           const SizedBox(height: 8),
@@ -392,7 +392,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           const SizedBox(height: 24),
         ],
 
-        // ─── Zeroes Section ───
+        // â”€â”€â”€ Zeroes Section â”€â”€â”€
         if (_zeroResults.isNotEmpty) ...[
           Text('Zeroes', style: AppTypography.captionMedium(color: secondaryText)),
           const SizedBox(height: 8),
@@ -400,7 +400,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           const SizedBox(height: 24),
         ],
 
-        // ─── Opinions Section ───
+        // â”€â”€â”€ Opinions Section â”€â”€â”€
         if (_opinionResults.isNotEmpty) ...[
           Text(
             _searchMode == 'zeroes' ? 'Opinions in this Zero' : 'Opinions',

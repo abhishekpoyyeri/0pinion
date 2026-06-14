@@ -1,4 +1,4 @@
-import 'package:opinion_app/core/widgets/video_loader.dart';
+import 'package:opinion_app/core/widgets/loading_gif_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -385,7 +385,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
 
             // Submit
             _isOpinionLoading
-                ? const Center(child: VideoLoader())
+                ? const Center(child: LoadingGifWidget())
                 : PrimaryButton(
                     label: 'Post Opinion',
                     onPressed: _submitOpinion,
@@ -542,7 +542,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
 
             // Submit
             _isRoomLoading
-                ? const Center(child: VideoLoader())
+                ? const Center(child: LoadingGifWidget())
                 : PrimaryButton(
                     label: 'Create Live Room',
                     onPressed: _submitLiveRoom,

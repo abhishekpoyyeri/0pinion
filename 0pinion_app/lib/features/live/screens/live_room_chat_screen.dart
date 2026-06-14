@@ -9,7 +9,7 @@ import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/providers/supabase_provider.dart';
 import '../../../data/repositories/live_room_repository.dart';
 
-/// Live Room Chat screen — ephemeral real-time debate via Supabase Broadcast
+/// Live Room Chat screen â€” ephemeral real-time debate via Supabase Broadcast
 /// Features: Presence counting, countdown timer, topic header, admin close, conclusion
 class LiveRoomChatScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -128,7 +128,7 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
       final remaining = endTime.difference(DateTime.now());
 
       if (remaining.isNegative) {
-        // Time's up — auto-close if we're the host
+        // Time's up â€” auto-close if we're the host
         _countdownTimer?.cancel();
         if (_isHost && _roomStatus == 'active') {
           _autoClose();
@@ -148,18 +148,18 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
       final repo = ref.read(liveRoomRepositoryProvider);
       await repo.closeRoom(
         roomId: widget.roomId,
-        conclusion: 'Room timed out — no conclusion was provided.',
+        conclusion: 'Room timed out â€” no conclusion was provided.',
       );
       _channel?.sendBroadcastMessage(
         event: 'room_closed',
         payload: {
-          'conclusion': 'Room timed out — no conclusion was provided.',
+          'conclusion': 'Room timed out â€” no conclusion was provided.',
         },
       );
       if (mounted) {
         setState(() {
           _roomStatus = 'closed';
-          _conclusion = 'Room timed out — no conclusion was provided.';
+          _conclusion = 'Room timed out â€” no conclusion was provided.';
         });
       }
     } catch (_) {}
@@ -447,7 +447,7 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
                 const SizedBox(width: 6),
                 Text(
                   _roomStatus == 'active'
-                      ? '$_presenceCount online  ·  ${_formatDuration(_remaining)} left'
+                      ? '$_presenceCount online  Â·  ${_formatDuration(_remaining)} left'
                       : 'CLOSED',
                   style: AppTypography.caption(color: secondaryText),
                 ),

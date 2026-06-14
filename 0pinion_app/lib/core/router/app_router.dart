@@ -56,7 +56,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // ─── Auth & Onboarding ───
+      // â”€â”€â”€ Auth & Onboarding â”€â”€â”€
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
@@ -82,7 +82,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const WelcomeScreen(),
       ),
 
-      // ─── Main App Shell (with bottom navigation) ───
+      // â”€â”€â”€ Main App Shell (with bottom navigation) â”€â”€â”€
       ShellRoute(
         navigatorKey: shellNavigatorKey,
         builder: (context, state, child) => BottomNavShell(child: child),
@@ -120,7 +120,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // ─── Detail Screens (push on top of shell) ───
+      // â”€â”€â”€ Detail Screens (push on top of shell) â”€â”€â”€
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: '/opinion/:id',
@@ -156,11 +156,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // ─── Community Detail Routes ───
+      // â”€â”€â”€ Community Detail Routes â”€â”€â”€
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
         path: '/community/create',
-        builder: (context, state) => const CreateCommunityScreen(),
+        builder: (context, state) => CreateCommunityScreen(
+          isPrivate: state.uri.queryParameters['private'] == 'true',
+        ),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

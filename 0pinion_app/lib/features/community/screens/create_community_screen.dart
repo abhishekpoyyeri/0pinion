@@ -10,7 +10,9 @@ import '../../../data/repositories/zero_repository.dart';
 
 /// Screen to create a new community with name, description, and zero tags
 class CreateCommunityScreen extends ConsumerStatefulWidget {
-  const CreateCommunityScreen({super.key});
+  final bool isPrivate;
+
+  const CreateCommunityScreen({super.key, this.isPrivate = false});
 
   @override
   ConsumerState<CreateCommunityScreen> createState() => _CreateCommunityScreenState();
@@ -91,6 +93,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
         name: name,
         description: description,
         zeroIds: _selectedZeroes.map((z) => z['id']!).toList(),
+        isPrivate: widget.isPrivate,
       );
 
       // Refresh the communities list
@@ -142,9 +145,11 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
 
     final canCreate = _nameController.text.trim().isNotEmpty && _isNameAvailable && !_isLoading;
 
+    final screenTitle = widget.isPrivate ? 'Create Private Community' : 'Create Public Community';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Community', style: AppTypography.h2(color: primaryText)),
+        title: Text(screenTitle, style: AppTypography.h2(color: primaryText)),
         leading: IconButton(
           icon: Icon(Icons.close, color: primaryText),
           onPressed: () => context.pop(),
@@ -188,6 +193,32 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Privacy indicator
+            if (widget.isPrivate) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: surfaceColor,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: borderColor),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.lock_outline, size: 16, color: secondaryText),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'Only invited members can join and view posts',
+                        style: AppTypography.caption(color: secondaryText),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+
             // Avatar preview
             Center(
               child: Column(
@@ -277,10 +308,13 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          zero['name']!,
-                          style: AppTypography.label(
-                            color: isDark ? AppColors.black : AppColors.white,
+                        Flexible(
+                          child: Text(
+                            zero['name']!,
+                            style: AppTypography.label(
+                              color: isDark ? AppColors.black : AppColors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const SizedBox(width: 6),

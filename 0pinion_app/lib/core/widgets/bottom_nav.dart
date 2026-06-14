@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'custom_navigation_dock.dart';
 
-/// Bottom navigation shell — 5 tabs: Home, Search, Create, Communities, Profile
+/// Bottom navigation shell â€” 5 tabs: Home, Search, Create, Communities, Profile
 class BottomNavShell extends StatelessWidget {
   final Widget child;
 

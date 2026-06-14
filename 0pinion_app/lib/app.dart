@@ -4,7 +4,7 @@ import 'core/theme/app_theme.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// 0pinion App — Debate, Not Doomscroll.
+/// 0pinion App â€” Debate, Not Doomscroll.
 class OpinionApp extends ConsumerWidget {
   const OpinionApp({super.key});
 

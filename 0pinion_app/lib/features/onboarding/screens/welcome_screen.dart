@@ -4,7 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/primary_button.dart';
 
-/// Welcome screen — "You're in." confirmation
+/// Welcome screen â€” "You're in." confirmation
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 

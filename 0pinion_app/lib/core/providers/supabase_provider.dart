@@ -100,4 +100,3 @@ final userZeroesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) asyn
       
   return List<Map<String, dynamic>>.from(zeroesRes);
 });
-

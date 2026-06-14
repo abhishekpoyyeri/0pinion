@@ -11,7 +11,7 @@ import '../../../core/providers/argument_provider.dart';
 import '../../../core/providers/opinion_provider.dart';
 import '../../../core/utils/error_handler.dart';
 
-/// Write Argument screen — compose a support/oppose/question argument
+/// Write Argument screen â€” compose a support/oppose/question argument
 class WriteArgumentScreen extends ConsumerStatefulWidget {
   final String opinionId;
 

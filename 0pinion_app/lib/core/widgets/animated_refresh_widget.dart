@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
-import 'video_loader.dart';
+import 'loading_gif_widget.dart';
 
-class VideoRefreshIndicator extends StatelessWidget {
+class AnimatedRefreshWidget extends StatelessWidget {
   final Widget child;
   final Future<void> Function() onRefresh;
 
-  const VideoRefreshIndicator({
+  const AnimatedRefreshWidget({
     super.key,
     required this.child,
     required this.onRefresh,
@@ -47,7 +47,7 @@ class VideoRefreshIndicator extends StatelessWidget {
                       child: Transform.scale(
                         scale: controller.value.clamp(0.0, 1.0),
                         child: const ClipOval(
-                          child: VideoLoader(width: 80, height: 80),
+                          child: LoadingGifWidget(width: 80, height: 80),
                         ),
                       ),
                     ),

@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
-/// 0pinion Theme — Light and Dark monochrome themes
+/// 0pinion Theme â€” Light and Dark monochrome themes
 class AppTheme {
   AppTheme._();
 
-  // ─── Light Theme ───
+  // â”€â”€â”€ Light Theme â”€â”€â”€
   static ThemeData light() {
     return ThemeData(
       useMaterial3: true,
@@ -175,7 +175,7 @@ class AppTheme {
     );
   }
 
-  // ─── Dark Theme ───
+  // â”€â”€â”€ Dark Theme â”€â”€â”€
   static ThemeData dark() {
     return ThemeData(
       useMaterial3: true,

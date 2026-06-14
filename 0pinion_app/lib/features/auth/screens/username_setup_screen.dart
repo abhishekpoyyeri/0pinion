@@ -1,4 +1,4 @@
-import 'package:opinion_app/core/widgets/video_loader.dart';
+import 'package:opinion_app/core/widgets/loading_gif_widget.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -11,7 +11,7 @@ import '../../../core/utils/error_handler.dart';
 import '../../../core/providers/supabase_provider.dart';
 import '../../../data/repositories/auth_repository.dart';
 
-/// Username setup screen — choose username, display name, see generated avatar
+/// Username setup screen â€” choose username, display name, see generated avatar
 class UsernameSetupScreen extends ConsumerStatefulWidget {
   const UsernameSetupScreen({super.key});
 
@@ -152,7 +152,7 @@ class _UsernameSetupScreenState extends ConsumerState<UsernameSetupScreen> {
               const SizedBox(height: 40),
 
               _isLoading
-                  ? const Center(child: VideoLoader())
+                  ? const Center(child: LoadingGifWidget())
                   : PrimaryButton(
                       label: 'Continue',
                       onPressed: _saveProfile,

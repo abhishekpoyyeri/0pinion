@@ -7,7 +7,7 @@ final feedOpinionsProvider = StreamProvider<List<Opinion>>((ref) {
   return repository.watchFeedOpinions();
 });
 
-/// Cooking opinions — sorted by time-decay cooking score, top 20.
+/// Cooking opinions â€” sorted by time-decay cooking score, top 20.
 /// Posts must have >= 3 weighted engagement points to qualify.
 final cookingOpinionsProvider = Provider<AsyncValue<List<Opinion>>>((ref) {
   final opinionsAsync = ref.watch(feedOpinionsProvider);

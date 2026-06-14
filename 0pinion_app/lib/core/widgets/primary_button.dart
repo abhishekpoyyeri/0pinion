@@ -1,8 +1,8 @@
-import 'package:opinion_app/core/widgets/video_loader.dart';
+import 'package:opinion_app/core/widgets/loading_gif_widget.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_typography.dart';
 
-/// Primary button — Black bg, white text (light mode) / White bg, black text (dark mode)
+/// Primary button â€” Black bg, white text (light mode) / White bg, black text (dark mode)
 class PrimaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
@@ -27,7 +27,7 @@ class PrimaryButton extends StatelessWidget {
           ? const SizedBox(
               width: 20,
               height: 20,
-              child: VideoLoader(width: 20, height: 20),
+              child: LoadingGifWidget(width: 20, height: 20),
             )
           : Row(
               mainAxisSize: MainAxisSize.min,
@@ -48,7 +48,7 @@ class PrimaryButton extends StatelessWidget {
   }
 }
 
-/// Secondary button — outlined with black border (light) / white border (dark)
+/// Secondary button â€” outlined with black border (light) / white border (dark)
 class SecondaryButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;

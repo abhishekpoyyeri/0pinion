@@ -1,5 +1,5 @@
-import 'package:opinion_app/core/widgets/video_refresh_indicator.dart';
-import 'package:opinion_app/core/widgets/video_loader.dart';
+import 'package:opinion_app/core/widgets/animated_refresh_widget.dart';
+import 'package:opinion_app/core/widgets/loading_gif_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
@@ -10,7 +10,7 @@ import '../../../core/providers/opinion_provider.dart';
 import '../../../data/repositories/auth_repository.dart';
 import 'package:go_router/go_router.dart';
 
-/// Profile screen — avatar, reputation, stats, opinions/arguments/zeroes tabs
+/// Profile screen â€” avatar, reputation, stats, opinions/arguments/zeroes tabs
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
 
@@ -156,7 +156,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       data: (opinions) {
         final userOpinions = opinions.where((o) => o.authorId == userId).toList();
         if (userOpinions.isEmpty) {
-          return VideoRefreshIndicator(
+          return AnimatedRefreshWidget(
             onRefresh: () async {
               ref.invalidate(feedOpinionsProvider);
               ref.invalidate(profileStatsProvider);
@@ -174,7 +174,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
             ),
           );
         }
-        return VideoRefreshIndicator(
+        return AnimatedRefreshWidget(
           onRefresh: () async {
             ref.invalidate(feedOpinionsProvider);
             ref.invalidate(profileStatsProvider);
@@ -214,8 +214,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
         );
       },
-      loading: () => const Center(child: VideoLoader()),
-      error: (e, _) => VideoRefreshIndicator(
+      loading: () => const Center(child: LoadingGifWidget()),
+      error: (e, _) => AnimatedRefreshWidget(
         onRefresh: () async {
           ref.invalidate(feedOpinionsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
@@ -250,7 +250,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return argumentsAsync.when(
       data: (arguments) {
         if (arguments.isEmpty) {
-          return VideoRefreshIndicator(
+          return AnimatedRefreshWidget(
             onRefresh: () async {
               ref.invalidate(userArgumentsProvider);
               ref.invalidate(profileStatsProvider);
@@ -273,7 +273,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           );
         }
 
-        return VideoRefreshIndicator(
+        return AnimatedRefreshWidget(
           onRefresh: () async {
             ref.invalidate(userArgumentsProvider);
             ref.invalidate(profileStatsProvider);
@@ -358,8 +358,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
         );
       },
-      loading: () => const Center(child: VideoLoader()),
-      error: (e, _) => VideoRefreshIndicator(
+      loading: () => const Center(child: LoadingGifWidget()),
+      error: (e, _) => AnimatedRefreshWidget(
         onRefresh: () async {
           ref.invalidate(userArgumentsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
@@ -393,7 +393,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     return zeroesAsync.when(
       data: (zeroes) {
         if (zeroes.isEmpty) {
-          return VideoRefreshIndicator(
+          return AnimatedRefreshWidget(
             onRefresh: () async {
               ref.invalidate(userZeroesProvider);
               ref.invalidate(profileStatsProvider);
@@ -416,7 +416,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           );
         }
 
-        return VideoRefreshIndicator(
+        return AnimatedRefreshWidget(
           onRefresh: () async {
             ref.invalidate(userZeroesProvider);
             ref.invalidate(profileStatsProvider);
@@ -477,8 +477,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ),
         );
       },
-      loading: () => const Center(child: VideoLoader()),
-      error: (e, _) => VideoRefreshIndicator(
+      loading: () => const Center(child: LoadingGifWidget()),
+      error: (e, _) => AnimatedRefreshWidget(
         onRefresh: () async {
           ref.invalidate(userZeroesProvider);
           await Future.delayed(const Duration(milliseconds: 500));
