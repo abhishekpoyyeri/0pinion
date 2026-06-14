@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/utils/error_handler.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/providers/community_provider.dart';
-import '../../../core/widgets/video_loader.dart';
+import '../../../core/widgets/loading_gif_widget.dart';
 import '../../../data/repositories/community_repository.dart';
 import '../../../data/repositories/zero_repository.dart';
 
@@ -106,9 +107,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create community: $e')),
-        );
+        AppErrorHandler.showErrorDialog(context, e);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -171,7 +170,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                     ? SizedBox(
                         width: 16,
                         height: 16,
-                        child: const VideoLoader(width: 16, height: 16),
+                        child: const LoadingGifWidget(width: 16, height: 16),
                       )
                     : Text(
                         'Create',
@@ -236,7 +235,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
               decoration: BoxDecoration(
                 color: surfaceColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _nameError != null ? Theme.of(context).colorScheme.error : borderColor),
+                border: Border.all(color: _nameError != null ? primaryText : borderColor),
               ),
               child: TextField(
                 controller: _nameController,
@@ -255,7 +254,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
             ),
             if (_nameError != null) ...[
               const SizedBox(height: 6),
-              Text(_nameError!, style: AppTypography.caption(color: Theme.of(context).colorScheme.error)),
+              Text(_nameError!, style: AppTypography.caption(color: primaryText)),
             ],
             const SizedBox(height: 24),
 

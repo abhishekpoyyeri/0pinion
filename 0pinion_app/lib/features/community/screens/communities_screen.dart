@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/utils/error_handler.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/providers/community_provider.dart';
@@ -8,7 +9,6 @@ import '../../../core/widgets/animated_refresh_widget.dart';
 import '../../../core/widgets/loading_gif_widget.dart';
 import '../../../data/models/community.dart';
 import '../../../data/repositories/community_repository.dart';
-import '../../../data/repositories/community_invite_repository.dart';
 import '../widgets/community_card.dart';
 
 /// Main community browser with Public/Private tabs
@@ -132,7 +132,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen>
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.wifi_off_outlined, size: 48, color: Theme.of(context).colorScheme.error),
+                            Icon(Icons.wifi_off_outlined, size: 48, color: secondaryText),
                             const SizedBox(height: 16),
                             Text(
                               'Could not load communities',
@@ -272,30 +272,21 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (sheetContext, setSheetState) {
-            final inviteRepo = ref.read(communityInviteRepositoryProvider);
-            return FutureBuilder<List<Map<String, dynamic>>>(
-              future: inviteRepo.fetchPendingInvites(),
-              builder: (sheetContext, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const SizedBox(
-                    height: 200,
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                if (snapshot.hasError) {
-                  return SizedBox(
-                    height: 200,
-                    child: Center(
-                      child: Text('Error loading invites', style: AppTypography.body(color: secondaryText)),
-                    ),
-                  );
-                }
-
-                final invites = snapshot.data ?? [];
-
+        return Consumer(
+          builder: (sheetContext, ref, child) {
+            final invitesAsync = ref.watch(pendingInvitesProvider);
+            return invitesAsync.when(
+              loading: () => const SizedBox(
+                height: 200,
+                child: Center(child: LoadingGifWidget()),
+              ),
+              error: (err, stack) => SizedBox(
+                height: 200,
+                child: Center(
+                  child: Text('Error loading invites', style: AppTypography.body(color: secondaryText)),
+                ),
+              ),
+              data: (invites) {
                 return SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.all(20),
@@ -354,7 +345,6 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen>
                                               ref.invalidate(communitiesProvider);
                                               ref.invalidate(pendingInvitesProvider);
                                               ref.invalidate(communityMembersProvider(communityId));
-                                              setSheetState(() {}); // refresh the bottom sheet
                                               if (context.mounted) {
                                                 ScaffoldMessenger.of(context).showSnackBar(
                                                   SnackBar(content: Text('Joined $communityName!')),
@@ -362,9 +352,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen>
                                               }
                                             } catch (e) {
                                               if (context.mounted) {
-                                                ScaffoldMessenger.of(context).showSnackBar(
-                                                  SnackBar(content: Text('Error: $e')),
-                                                );
+                                                  AppErrorHandler.showErrorDialog(context, e);
                                               }
                                             }
                                           },

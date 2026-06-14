@@ -25,10 +25,11 @@ class AnimatedRefreshWidget extends StatelessWidget {
           children: <Widget>[
             AnimatedBuilder(
               animation: controller,
-              builder: (BuildContext context, _) {
+              child: child,
+              builder: (BuildContext context, Widget? cachedChild) {
                 return Transform.translate(
                   offset: Offset(0.0, controller.value * 120),
-                  child: child,
+                  child: cachedChild,
                 );
               },
             ),

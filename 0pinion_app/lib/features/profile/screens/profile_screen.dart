@@ -65,7 +65,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       body: user == null
           ? Center(child: Text('Not logged in', style: AppTypography.body(color: primaryText)))
           : (profileAsync.isLoading && profile == null)
-              ? const Center(child: VideoLoader())
+              ? const Center(child: LoadingGifWidget())
               : Column(
               children: [
                 // Profile header
@@ -228,7 +228,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.wifi_off_outlined, size: 32, color: Theme.of(context).colorScheme.error),
+                    Icon(Icons.wifi_off_outlined, size: 32, color: secondaryText),
                     const SizedBox(height: 8),
                     Text('Connection lost', style: AppTypography.bodyMedium(color: primaryText)),
                     Text('Pull to refresh', style: AppTypography.caption(color: secondaryText)),
@@ -373,7 +373,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.wifi_off_outlined, size: 32, color: Theme.of(context).colorScheme.error),
+                    Icon(Icons.wifi_off_outlined, size: 32, color: secondaryText),
                     const SizedBox(height: 8),
                     Text('Connection lost', style: AppTypography.bodyMedium(color: primaryText)),
                     Text('Pull to refresh', style: AppTypography.caption(color: secondaryText)),
@@ -493,7 +493,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.wifi_off_outlined, size: 32, color: Theme.of(context).colorScheme.error),
+                    Icon(Icons.wifi_off_outlined, size: 32, color: secondaryText),
                     const SizedBox(height: 8),
                     Text('Connection lost', style: AppTypography.bodyMedium(color: primaryText)),
                     Text('Pull to refresh', style: AppTypography.caption(color: secondaryText)),

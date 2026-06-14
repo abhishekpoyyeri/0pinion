@@ -211,14 +211,16 @@ class CommunityRepository {
     await _supabase.from('communities').delete().eq('id', communityId);
   }
 
-  /// Check if community name is available
+  /// Check if community name is available.
+  /// Uses an RPC function (SECURITY DEFINER) so it sees ALL communities,
+  /// including ones hidden from the current user by RLS.
   Future<bool> isNameAvailable(String name) async {
-    final res = await _supabase
-        .from('communities')
-        .select('id')
-        .ilike('name', name)
-        .maybeSingle();
-    return res == null;
+    final res = await _supabase.rpc(
+      'is_community_name_taken',
+      params: {'check_name': name},
+    );
+    // RPC returns true if taken, so invert for "available"
+    return res == false;
   }
 
   // --- INVITE METHODS ---

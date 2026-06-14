@@ -101,9 +101,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        AppErrorHandler.showErrorDialog(context, e);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

@@ -40,7 +40,7 @@ class AppErrorHandler {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.redAccent),
+                Icon(Icons.error_outline, size: 48, color: primaryText),
                 const SizedBox(height: 16),
                 Text('Oops!', style: AppTypography.h2(color: primaryText)),
                 const SizedBox(height: 8),
@@ -89,8 +89,23 @@ class AppErrorHandler {
 
   static String _parsePostgrestException(PostgrestException e) {
     final msg = e.message.toLowerCase();
-    if (msg.contains('unique constraint')) {
+    final detail = (e.details ?? '').toString().toLowerCase();
+    
+    if (msg.contains('unique constraint') || msg.contains('duplicate key')) {
+      // Specific constraint messages
+      if (msg.contains('communities_name_key') || detail.contains('communities_name_key')) {
+        return 'A community with this name already exists. Please choose a different name.';
+      }
+      if (msg.contains('profiles_username_key') || detail.contains('profiles_username_key')) {
+        return 'This username is already taken. Please choose another.';
+      }
       return 'This value is already taken. Please try another one.';
+    }
+    if (msg.contains('violates foreign key constraint')) {
+      return 'This action references data that no longer exists. Please refresh and try again.';
+    }
+    if (msg.contains('permission denied') || msg.contains('new row violates row-level security')) {
+      return 'You don\'t have permission to perform this action.';
     }
     return e.message;
   }

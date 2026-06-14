@@ -189,9 +189,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        AppErrorHandler.showErrorDialog(context, e);
       }
     } finally {
       if (mounted) setState(() => _isRoomLoading = false);

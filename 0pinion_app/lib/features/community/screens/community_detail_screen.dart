@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/utils/error_handler.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
@@ -57,9 +58,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
       ref.invalidate(communitiesProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        AppErrorHandler.showErrorDialog(context, e);
       }
     }
   }
@@ -85,7 +84,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text('Delete', style: AppTypography.bodySemiBold(color: Theme.of(dialogContext).colorScheme.error)),
+            child: Text('Delete', style: AppTypography.bodySemiBold(color: primaryText)),
           ),
         ],
       ),
@@ -100,9 +99,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete community: $e')),
-          );
+          AppErrorHandler.showErrorDialog(context, e);
         }
       }
     }
@@ -138,7 +135,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
               // Remove the Search icon since it's now in Members Tab
               if (isCreator)
                 IconButton(
-                  icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
+                  icon: Icon(Icons.delete_outline, color: primaryText),
                   onPressed: () => _confirmDeleteCommunity(community.name),
                   tooltip: 'Delete Community',
                 ),
@@ -604,15 +601,15 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
-                                color: Colors.orange.withValues(alpha: 0.1),
-                                border: Border.all(color: Colors.orange),
+                                color: Colors.transparent,
+                                border: Border.all(color: borderColor),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.schedule, size: 14, color: Colors.orange),
+                                  Icon(Icons.schedule, size: 14, color: secondaryText),
                                   const SizedBox(width: 4),
-                                  Text('Pending', style: AppTypography.captionMedium(color: Colors.orange)),
+                                  Text('Pending', style: AppTypography.captionMedium(color: secondaryText)),
                                 ],
                               ),
                             );
@@ -621,15 +618,15 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
-                                color: Colors.green.withValues(alpha: 0.1),
-                                border: Border.all(color: Colors.green),
+                                color: primaryText,
+                                border: Border.all(color: primaryText),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.check_circle, size: 14, color: Colors.green),
+                                  Icon(Icons.check_circle, size: 14, color: surfaceColor),
                                   const SizedBox(width: 4),
-                                  Text('Joined', style: AppTypography.captionMedium(color: Colors.green)),
+                                  Text('Joined', style: AppTypography.captionMedium(color: surfaceColor)),
                                 ],
                               ),
                             );
@@ -638,15 +635,18 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
-                                color: Colors.red.withValues(alpha: 0.1),
-                                border: Border.all(color: Colors.red),
+                                color: Colors.transparent,
+                                border: Border.all(color: secondaryText),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.cancel, size: 14, color: Colors.red),
+                                  Icon(Icons.cancel, size: 14, color: secondaryText),
                                   const SizedBox(width: 4),
-                                  Text('Declined', style: AppTypography.captionMedium(color: Colors.red)),
+                                  Text(
+                                    'Declined', 
+                                    style: AppTypography.captionMedium(color: secondaryText).copyWith(decoration: TextDecoration.lineThrough)
+                                  ),
                                 ],
                               ),
                             );
@@ -660,16 +660,14 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
                                     inviteeId: userId,
                                   );
                                   ref.invalidate(searchUsersProvider((communityId: widget.communityId, query: _query)));
-                                  if (mounted) {
+                                  if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Invited @')),
+                                      SnackBar(content: Text('Invited @$username')),
                                     );
                                   }
                                 } catch (e) {
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Error: ')),
-                                    );
+                                  if (context.mounted) {
+                                    AppErrorHandler.showErrorDialog(context, e);
                                   }
                                 }
                               },
