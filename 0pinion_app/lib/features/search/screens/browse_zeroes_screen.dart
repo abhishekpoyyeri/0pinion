@@ -80,7 +80,7 @@ class BrowseZeroesScreen extends StatelessWidget {
                     ),
                     const SizedBox(width: 16),
                     Text(
-                      '${_formatCount(zero.membersCount)} members',
+                      '${_formatCount(zero.membersCount)} member${zero.membersCount == 1 ? '' : 's'}',
                       style: AppTypography.caption(color: secondaryText),
                     ),
                   ],

@@ -42,10 +42,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             state.matchedLocation != '/welcome') {
           return '/splash';
         }
-      } else {
-        if (isGoingToAuth) {
-          return '/home';
-        }
       }
       return null;
     },

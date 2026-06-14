@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/opinion_card.dart';
+import '../../../core/widgets/keep_alive_wrapper.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/opinion_provider.dart';
 import '../../../data/repositories/live_room_repository.dart';
@@ -122,6 +123,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       data: (opinions) => _buildFeed(filter(opinions as List), tabKey),
       loading: () => const Center(child: LoadingGifWidget()),
       error: (err, stack) => AnimatedRefreshWidget(
+        key: ValueKey('${tabKey}_error_refresh'),
         onRefresh: () async {
           ref.invalidate(feedOpinionsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
@@ -138,7 +140,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.wifi_off_outlined, size: 48, color: Theme.of(context).colorScheme.error),
+                      Icon(
+                        Icons.wifi_off_outlined, 
+                        size: 48, 
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.darkSecondaryText
+                            : AppColors.lightSecondaryText,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'Connection lost or session expired',
@@ -176,6 +184,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       data: (opinions) => _buildFeed(opinions, 'cooking'),
       loading: () => const Center(child: LoadingGifWidget()),
       error: (err, stack) => AnimatedRefreshWidget(
+        key: const ValueKey('cooking_error_refresh'),
         onRefresh: () async {
           ref.invalidate(feedOpinionsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
@@ -206,6 +215,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   Widget _buildFeed(List opinions, String tabKey) {
     if (opinions.isEmpty) {
       return AnimatedRefreshWidget(
+        key: ValueKey('${tabKey}_empty_refresh'),
         onRefresh: () async {
           ref.invalidate(feedOpinionsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
@@ -246,6 +256,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
 
     return AnimatedRefreshWidget(
+      key: ValueKey('${tabKey}_data_refresh'),
       onRefresh: () async {
         ref.invalidate(feedOpinionsProvider);
         await Future.delayed(const Duration(milliseconds: 500));
@@ -279,7 +290,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return roomsAsync.when(
       skipLoadingOnRefresh: true,
       loading: () => const Center(child: LoadingGifWidget()),
-      error: (err, _) => AnimatedRefreshWidget(        onRefresh: () async {
+      error: (err, _) => AnimatedRefreshWidget(
+        key: const ValueKey('live_rooms_error_refresh'),
+        onRefresh: () async {
           ref.invalidate(liveRoomsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
         },
@@ -300,6 +313,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       data: (rooms) {
         if (rooms.isEmpty) {
           return AnimatedRefreshWidget(
+            key: const ValueKey('live_rooms_empty_refresh'),
             onRefresh: () async {
               ref.invalidate(liveRoomsProvider);
               await Future.delayed(const Duration(milliseconds: 500));
@@ -331,6 +345,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         }
 
         return AnimatedRefreshWidget(
+          key: const ValueKey('live_rooms_data_refresh'),
           onRefresh: () async {
             ref.invalidate(liveRoomsProvider);
             await Future.delayed(const Duration(milliseconds: 500));
@@ -346,7 +361,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               final roomId = room['id'] as String;
               final title = room['title'] as String? ?? 'Untitled';
               final topic = room['topic'] as String? ?? '';
-              final participantCount = room['participant_count'] as int? ?? 1;
+              final rawCount = room['participant_count'] as int? ?? 1;
+              final participantCount = rawCount > 1 ? rawCount - 1 : 0;
 
               final profileData = room['profiles'];
               final hostUsername = profileData != null && profileData is Map
@@ -482,7 +498,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 size: 16, color: secondaryText),
                             const SizedBox(width: 4),
                             Text(
-                              '$participantCount participants',
+                              '$participantCount participant${participantCount == 1 ? '' : 's'}',
                               style: AppTypography.caption(
                                   color: secondaryText),
                             ),

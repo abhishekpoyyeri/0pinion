@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/utils/app_dialogs.dart';
+import '../../../core/utils/error_handler.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
@@ -32,9 +34,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        setState(() {});
-      }
+      setState(() {});
     });
   }
 
@@ -45,6 +45,32 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
   }
 
   Future<void> _toggleMembership(bool isMember) async {
+    if (isMember) {
+      final communityAsync = ref.read(communityDetailProvider(widget.communityId));
+      final community = communityAsync.value;
+      if (community != null) {
+        final currentUserId = ref.read(supabaseClientProvider).auth.currentUser?.id;
+        final isCreator = community.creatorId == currentUserId;
+
+        if (isCreator) {
+          final membersAsync = ref.read(communityMembersProvider(widget.communityId));
+          final members = membersAsync.value ?? [];
+
+          if (members.length > 1) {
+            AppErrorHandler.showErrorDialog(
+              context, 
+              'You are the admin of this community. Please transfer admin controls to someone else before leaving.'
+            );
+            return;
+          } else {
+            // Admin is the only member left
+            _confirmDeleteCommunity(community.name);
+            return;
+          }
+        }
+      }
+    }
+
     final repo = ref.read(communityRepositoryProvider);
     try {
       if (isMember) {
@@ -57,38 +83,18 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
       ref.invalidate(communitiesProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        AppErrorHandler.showErrorDialog(context, e);
       }
     }
   }
 
   Future<void> _confirmDeleteCommunity(String communityName) async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
-    final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
-
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialogs.showConfirmDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Theme.of(dialogContext).scaffoldBackgroundColor,
-        title: Text('Delete Community?', style: AppTypography.h3(color: primaryText)),
-        content: Text(
-          'Are you sure you want to permanently delete "$communityName"? This will remove all posts, members, and data associated with it. This action cannot be undone.',
-          style: AppTypography.body(color: secondaryText),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text('Cancel', style: AppTypography.bodySemiBold(color: secondaryText)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text('Delete', style: AppTypography.bodySemiBold(color: Theme.of(dialogContext).colorScheme.error)),
-          ),
-        ],
-      ),
+      title: 'Delete Community?',
+      message: 'Are you sure you want to permanently delete "$communityName"? This will remove all posts, members, and data associated with it. This action cannot be undone.',
+      confirmText: 'Delete',
+      icon: Icons.delete_forever_outlined,
     );
 
     if (confirmed == true && mounted) {
@@ -100,9 +106,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to delete community: $e')),
-          );
+          AppErrorHandler.showErrorDialog(context, e);
         }
       }
     }
@@ -138,7 +142,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
               // Remove the Search icon since it's now in Members Tab
               if (isCreator)
                 IconButton(
-                  icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.error),
+                  icon: Icon(Icons.delete_outline, color: primaryText),
                   onPressed: () => _confirmDeleteCommunity(community.name),
                   tooltip: 'Delete Community',
                 ),
@@ -182,7 +186,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
                             Text(community.name, style: AppTypography.h3(color: primaryText)),
                             const SizedBox(height: 4),
                             Text(
-                              '${community.memberCount} members • ${community.postCount} posts',
+                              '${community.memberCount} member${community.memberCount == 1 ? '' : 's'} • ${community.postCount} post${community.postCount == 1 ? '' : 's'}',
                               style: AppTypography.caption(color: secondaryText),
                             ),
                           ],
@@ -286,56 +290,123 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
 
             // Tab content
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
+              child: Stack(
                 children: [
-                  _PostsTab(
-                    communityId: widget.communityId,
-                    isMember: community.isMember,
+                  TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _PostsTab(
+                        communityId: widget.communityId,
+                        isMember: community.isMember,
+                      ),
+                      _MembersTab(
+                        communityId: widget.communityId,
+                        isCreator: community.creatorId == currentUserId,
+                        isPrivate: community.isPrivate,
+                      ),
+                      _AboutTab(community: community),
+                    ],
                   ),
-                  _MembersTab(
-                    communityId: widget.communityId,
-                    isCreator: community.creatorId == currentUserId,
-                    isPrivate: community.isPrivate,
-                  ),
-                  _AboutTab(community: community),
+                  if (community.isMember)
+                    AnimatedBuilder(
+                      animation: _tabController.animation!,
+                      builder: (context, child) {
+                        final v = _tabController.animation!.value;
+                        final isCreator = community.creatorId == currentUserId;
+                        
+                        double opacity = 1.0;
+                        if (v > 1.0) {
+                          opacity = (2.0 - v).clamp(0.0, 1.0);
+                        } else if (v < 0.0) {
+                          opacity = (1.0 + v).clamp(0.0, 1.0);
+                        }
+                        
+                        if (!isCreator && v > 0.0) {
+                          opacity = (1.0 - v).clamp(0.0, 1.0);
+                        }
+
+                        if (opacity <= 0.0) return const SizedBox.shrink();
+
+                        final screenWidth = MediaQuery.of(context).size.width;
+                        const writeWidth = 56.0;
+                        const addMemberWidth = 160.0;
+                        
+                        final currentV = v.clamp(0.0, 1.0);
+                        final targetWidth = isCreator ? addMemberWidth : writeWidth;
+                        final currentWidth = writeWidth + (targetWidth - writeWidth) * currentV;
+                        final targetRight = (screenWidth - currentWidth) / 2;
+                        final endRight = isCreator ? targetRight : 16.0;
+                        final currentRight = 16.0 + (endRight - 16.0) * currentV;
+
+                        return Positioned(
+                          right: currentRight,
+                          bottom: 16.0,
+                          child: Opacity(
+                            opacity: opacity,
+                            child: Material(
+                              color: primaryText,
+                              borderRadius: BorderRadius.circular(28.0),
+                              elevation: 4,
+                              clipBehavior: Clip.antiAlias,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(28.0),
+                                onTap: () {
+                                  if (v < 0.5) {
+                                    context.push('/community/${widget.communityId}/post').then((_) {
+                                      ref.invalidate(communityPostsProvider(widget.communityId));
+                                      ref.invalidate(communityDetailProvider(widget.communityId));
+                                    });
+                                  } else if (isCreator) {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (_) => _AddMemberSheet(communityId: widget.communityId),
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  width: currentWidth,
+                                  height: 56.0,
+                                  alignment: Alignment.center,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Opacity(
+                                        opacity: (1.0 - currentV * 2).clamp(0.0, 1.0),
+                                        child: Icon(Icons.edit_outlined, color: isDark ? AppColors.black : AppColors.white),
+                                      ),
+                                      if (isCreator)
+                                        Opacity(
+                                          opacity: ((currentV - 0.5) * 2).clamp(0.0, 1.0),
+                                          child: SingleChildScrollView(
+                                            scrollDirection: Axis.horizontal,
+                                            physics: const NeverScrollableScrollPhysics(),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.person_add_alt_1, color: isDark ? AppColors.black : AppColors.white),
+                                                const SizedBox(width: 8),
+                                                Text('Add Member', style: AppTypography.button(color: isDark ? AppColors.black : AppColors.white)),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      floatingActionButtonLocation: _tabController.index == 1 ? FloatingActionButtonLocation.centerFloat : FloatingActionButtonLocation.endFloat,
-      floatingActionButton: (communityAsync.value?.isMember == true && 
-                            (_tabController.index == 0 || 
-                            (_tabController.index == 1 && communityAsync.value?.creatorId == currentUserId)))
-          ? FloatingActionButton.extended(
-              isExtended: _tabController.index == 1,
-              onPressed: () async {
-                if (_tabController.index == 0) {
-                  await context.push('/community/${widget.communityId}/post');
-                  ref.invalidate(communityPostsProvider(widget.communityId));
-                  ref.invalidate(communityDetailProvider(widget.communityId));
-                } else {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (_) => _AddMemberSheet(communityId: widget.communityId),
-                  );
-                }
-              },
-              backgroundColor: primaryText,
-              icon: Icon(
-                _tabController.index == 1 ? Icons.person_add_alt_1 : Icons.edit_outlined,
-                color: isDark ? AppColors.black : AppColors.white,
-              ),
-              label: Text(
-                'Add Member',
-                style: AppTypography.button(color: isDark ? AppColors.black : AppColors.white),
-              ),
-            )
-          : null,
     );
   }
 }
@@ -526,7 +597,7 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Add User', style: AppTypography.h2(color: primaryText)),
+              Text('Add Member', style: AppTypography.h2(color: primaryText)),
               IconButton(icon: Icon(Icons.close, color: primaryText), onPressed: () => Navigator.pop(context)),
             ],
           ),
@@ -604,15 +675,15 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
-                                color: Colors.orange.withValues(alpha: 0.1),
-                                border: Border.all(color: Colors.orange),
+                                color: Colors.transparent,
+                                border: Border.all(color: borderColor),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.schedule, size: 14, color: Colors.orange),
+                                  Icon(Icons.schedule, size: 14, color: secondaryText),
                                   const SizedBox(width: 4),
-                                  Text('Pending', style: AppTypography.captionMedium(color: Colors.orange)),
+                                  Text('Pending', style: AppTypography.captionMedium(color: secondaryText)),
                                 ],
                               ),
                             );
@@ -621,15 +692,15 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
-                                color: Colors.green.withValues(alpha: 0.1),
-                                border: Border.all(color: Colors.green),
+                                color: primaryText,
+                                border: Border.all(color: primaryText),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.check_circle, size: 14, color: Colors.green),
+                                  Icon(Icons.check_circle, size: 14, color: surfaceColor),
                                   const SizedBox(width: 4),
-                                  Text('Joined', style: AppTypography.captionMedium(color: Colors.green)),
+                                  Text('Joined', style: AppTypography.captionMedium(color: surfaceColor)),
                                 ],
                               ),
                             );
@@ -638,15 +709,18 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(16),
-                                color: Colors.red.withValues(alpha: 0.1),
-                                border: Border.all(color: Colors.red),
+                                color: Colors.transparent,
+                                border: Border.all(color: secondaryText),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Icon(Icons.cancel, size: 14, color: Colors.red),
+                                  Icon(Icons.cancel, size: 14, color: secondaryText),
                                   const SizedBox(width: 4),
-                                  Text('Declined', style: AppTypography.captionMedium(color: Colors.red)),
+                                  Text(
+                                    'Declined', 
+                                    style: AppTypography.captionMedium(color: secondaryText).copyWith(decoration: TextDecoration.lineThrough)
+                                  ),
                                 ],
                               ),
                             );
@@ -660,16 +734,14 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
                                     inviteeId: userId,
                                   );
                                   ref.invalidate(searchUsersProvider((communityId: widget.communityId, query: _query)));
-                                  if (mounted) {
+                                  if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Invited @')),
+                                      SnackBar(content: Text('Invited @$username')),
                                     );
                                   }
                                 } catch (e) {
-                                  if (mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Error: ')),
-                                    );
+                                  if (context.mounted) {
+                                    AppErrorHandler.showErrorDialog(context, e);
                                   }
                                 }
                               },
@@ -692,7 +764,7 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Text(displayName, style: AppTypography.bodyMedium(color: primaryText)),
-                                      Text('@', style: AppTypography.caption(color: secondaryText)),
+                                      Text('@$username', style: AppTypography.caption(color: secondaryText)),
                                     ],
                                   ),
                                 ),
@@ -767,41 +839,51 @@ class _MembersTabState extends ConsumerState<_MembersTab> {
                         final avatarSeed = profile?['avatar_seed'] as int? ?? 0;
                         final role = member['role'] as String? ?? 'member';
 
+                        final userId = member['user_id'] as String;
+
                         return Column(
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              child: Row(
-                                children: [
-                                  AvatarWidget(seed: avatarSeed, size: 36),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(displayName, style: AppTypography.bodyMedium(color: primaryText)),
-                                        Text('@', style: AppTypography.caption(color: secondaryText)),
-                                      ],
-                                    ),
-                                  ),
-                                  if (role != 'member')
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: role == 'admin' ? primaryText : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(6),
-                                        border: Border.all(color: primaryText),
+                            GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onLongPress: () {
+                                if (widget.isCreator && role != 'admin') {
+                                  _showTransferAdminDialog(context, userId, displayName, username);
+                                }
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                child: Row(
+                                  children: [
+                                    AvatarWidget(seed: avatarSeed, size: 36),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(displayName, style: AppTypography.bodyMedium(color: primaryText)),
+                                          Text('@$username', style: AppTypography.caption(color: secondaryText)),
+                                        ],
                                       ),
-                                      child: Text(
-                                        role.toUpperCase(),
-                                        style: AppTypography.label(
-                                          color: role == 'admin'
-                                              ? (isDark ? AppColors.black : AppColors.white)
-                                              : primaryText,
+                                    ),
+                                    if (role != 'member')
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                        decoration: BoxDecoration(
+                                          color: role == 'admin' ? primaryText : Colors.transparent,
+                                          borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(color: primaryText),
+                                        ),
+                                        child: Text(
+                                          role.toUpperCase(),
+                                          style: AppTypography.label(
+                                            color: role == 'admin'
+                                                ? (isDark ? AppColors.black : AppColors.white)
+                                                : primaryText,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                             if (index < members.length - 1)
@@ -818,6 +900,33 @@ class _MembersTabState extends ConsumerState<_MembersTab> {
         );
       },
     );
+  }
+
+  void _showTransferAdminDialog(BuildContext context, String newAdminId, String displayName, String username) async {
+    final confirmed = await AppDialogs.showConfirmDialog(
+      context: context,
+      title: 'Make Admin?',
+      message: 'Are you sure you want to transfer your admin rights to $displayName (@$username)? You will lose your admin status and become a regular member.',
+      confirmText: 'Transfer',
+      icon: Icons.admin_panel_settings_outlined,
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final repo = ref.read(communityRepositoryProvider);
+        await repo.transferAdmin(
+          communityId: widget.communityId,
+          newAdminId: newAdminId,
+        );
+        ref.invalidate(communityDetailProvider(widget.communityId));
+        ref.invalidate(communityMembersProvider(widget.communityId));
+        ref.invalidate(communitiesProvider);
+      } catch (e) {
+        if (context.mounted) {
+          AppErrorHandler.showErrorDialog(context, e);
+        }
+      }
+    }
   }
 }
 class _AboutTab extends StatelessWidget {

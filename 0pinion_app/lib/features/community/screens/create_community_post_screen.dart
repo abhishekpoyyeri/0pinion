@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/utils/error_handler.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/providers/community_provider.dart';
-import '../../../core/widgets/video_loader.dart';
+import '../../../core/widgets/loading_gif_widget.dart';
 import '../../../data/repositories/community_repository.dart';
 
 /// Screen to create a new post inside a community
@@ -44,9 +45,7 @@ class _CreateCommunityPostScreenState
       if (mounted) context.pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to post: $e')),
-        );
+        AppErrorHandler.showErrorDialog(context, e);
       }
     } finally {
       if (mounted) setState(() => _isPosting = false);
@@ -101,7 +100,7 @@ class _CreateCommunityPostScreenState
                     ? SizedBox(
                         width: 16,
                         height: 16,
-                        child: const VideoLoader(width: 16, height: 16),
+                        child: const LoadingGifWidget(width: 16, height: 16),
                       )
                     : Text(
                         'Post',
@@ -151,7 +150,7 @@ class _CreateCommunityPostScreenState
                 '$contentLength / $_maxLength',
                 style: AppTypography.caption(
                   color: contentLength > _maxLength
-                      ? Theme.of(context).colorScheme.error
+                      ? primaryText
                       : secondaryText,
                 ),
               ),

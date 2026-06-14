@@ -128,7 +128,53 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
       );
 
       if (mounted) {
-        context.go('/home');
+        _opinionTitleController.clear();
+        _opinionContentController.clear();
+        setState(() {
+          _detectedZeroes.clear();
+          _isAnonymous = false;
+        });
+
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
+            final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
+            
+            return Dialog(
+              backgroundColor: isDark ? AppColors.black : AppColors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle, color: primaryText, size: 64),
+                    const SizedBox(height: 16),
+                    Text('Opinion Posted', style: AppTypography.h2(color: primaryText)),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Your voice has been added to the debate.',
+                      style: AppTypography.body(color: secondaryText),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+
+        await Future.delayed(const Duration(milliseconds: 1500));
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
+          context.go('/home');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -185,13 +231,58 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
       );
 
       if (mounted) {
-        context.go('/live/$roomId');
+        _roomTitleController.clear();
+        _roomTopicController.clear();
+        setState(() {
+          _selectedDuration = 10;
+          _isCustomDuration = false;
+          _customDurationController.clear();
+        });
+
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
+            final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
+            
+            return Dialog(
+              backgroundColor: isDark ? AppColors.black : AppColors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.podcasts, color: primaryText, size: 64),
+                    const SizedBox(height: 16),
+                    Text('Room Created', style: AppTypography.h2(color: primaryText)),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Your live room is ready to host the debate.',
+                      style: AppTypography.body(color: secondaryText),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+
+        await Future.delayed(const Duration(milliseconds: 1500));
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
+          context.go('/live/$roomId');
+        }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        AppErrorHandler.showErrorDialog(context, e);
       }
     } finally {
       if (mounted) setState(() => _isRoomLoading = false);
@@ -384,12 +475,11 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
             const SizedBox(height: 40),
 
             // Submit
-            _isOpinionLoading
-                ? const Center(child: LoadingGifWidget())
-                : PrimaryButton(
-                    label: 'Post Opinion',
-                    onPressed: _submitOpinion,
-                  ),
+            PrimaryButton(
+              label: 'Post Opinion',
+              onPressed: _submitOpinion,
+              isLoading: _isOpinionLoading,
+            ),
             const SizedBox(height: 32),
           ],
         ),
@@ -541,12 +631,11 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
             const SizedBox(height: 40),
 
             // Submit
-            _isRoomLoading
-                ? const Center(child: LoadingGifWidget())
-                : PrimaryButton(
-                    label: 'Create Live Room',
-                    onPressed: _submitLiveRoom,
-                  ),
+            PrimaryButton(
+              label: 'Create Live Room',
+              onPressed: _submitLiveRoom,
+              isLoading: _isRoomLoading,
+            ),
             const SizedBox(height: 32),
           ],
         ),

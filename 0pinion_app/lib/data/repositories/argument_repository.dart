@@ -21,7 +21,7 @@ class ArgumentRepository {
         .asyncMap((data) async {
           // Because stream() doesn't support joined selects directly, fetch relations manually via select
           final res = await _supabase.from('arguments').select(
-              '*, profiles!arguments_author_id_fkey(username)'
+              '*, profiles(username)'
           ).eq('opinion_id', opinionId).order('created_at', ascending: true);
           return res.map((json) => Argument.fromJson(json)).toList();
         });

@@ -52,7 +52,7 @@ class CommunityCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        '${community.memberCount} members • ${community.postCount} posts',
+                        '${community.memberCount} member${community.memberCount == 1 ? '' : 's'} • ${community.postCount} post${community.postCount == 1 ? '' : 's'}',
                         style: AppTypography.caption(color: secondaryText),
                       ),
                     ],

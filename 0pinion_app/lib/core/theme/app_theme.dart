@@ -172,6 +172,12 @@ class AppTheme {
           fontWeight: FontWeight.w400,
         ),
       ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.black,
+        contentTextStyle: GoogleFonts.inter(color: AppColors.white),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
     );
   }
 
@@ -340,6 +346,12 @@ class AppTheme {
           fontSize: 16,
           fontWeight: FontWeight.w400,
         ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.white,
+        contentTextStyle: GoogleFonts.inter(color: AppColors.black),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
