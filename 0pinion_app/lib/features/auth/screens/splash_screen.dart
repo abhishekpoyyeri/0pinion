@@ -44,6 +44,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   Future<void> _checkAuthAndProfile() async {
+    if (!mounted) return;
     final user = ref.read(currentUserProvider);
     if (user != null) {
       final authRepo = ref.read(authRepositoryProvider);
