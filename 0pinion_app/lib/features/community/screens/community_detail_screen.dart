@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/utils/app_dialogs.dart';
 import '../../../core/utils/error_handler.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -33,9 +34,7 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        setState(() {});
-      }
+      setState(() {});
     });
   }
 
@@ -90,30 +89,12 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
   }
 
   Future<void> _confirmDeleteCommunity(String communityName) async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
-    final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
-
-    final confirmed = await showDialog<bool>(
+    final confirmed = await AppDialogs.showConfirmDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: Theme.of(dialogContext).scaffoldBackgroundColor,
-        title: Text('Delete Community?', style: AppTypography.h3(color: primaryText)),
-        content: Text(
-          'Are you sure you want to permanently delete "$communityName"? This will remove all posts, members, and data associated with it. This action cannot be undone.',
-          style: AppTypography.body(color: secondaryText),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text('Cancel', style: AppTypography.bodySemiBold(color: secondaryText)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text('Delete', style: AppTypography.bodySemiBold(color: primaryText)),
-          ),
-        ],
-      ),
+      title: 'Delete Community?',
+      message: 'Are you sure you want to permanently delete "$communityName"? This will remove all posts, members, and data associated with it. This action cannot be undone.',
+      confirmText: 'Delete',
+      icon: Icons.delete_forever_outlined,
     );
 
     if (confirmed == true && mounted) {
@@ -309,56 +290,123 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
 
             // Tab content
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
+              child: Stack(
                 children: [
-                  _PostsTab(
-                    communityId: widget.communityId,
-                    isMember: community.isMember,
+                  TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _PostsTab(
+                        communityId: widget.communityId,
+                        isMember: community.isMember,
+                      ),
+                      _MembersTab(
+                        communityId: widget.communityId,
+                        isCreator: community.creatorId == currentUserId,
+                        isPrivate: community.isPrivate,
+                      ),
+                      _AboutTab(community: community),
+                    ],
                   ),
-                  _MembersTab(
-                    communityId: widget.communityId,
-                    isCreator: community.creatorId == currentUserId,
-                    isPrivate: community.isPrivate,
-                  ),
-                  _AboutTab(community: community),
+                  if (community.isMember)
+                    AnimatedBuilder(
+                      animation: _tabController.animation!,
+                      builder: (context, child) {
+                        final v = _tabController.animation!.value;
+                        final isCreator = community.creatorId == currentUserId;
+                        
+                        double opacity = 1.0;
+                        if (v > 1.0) {
+                          opacity = (2.0 - v).clamp(0.0, 1.0);
+                        } else if (v < 0.0) {
+                          opacity = (1.0 + v).clamp(0.0, 1.0);
+                        }
+                        
+                        if (!isCreator && v > 0.0) {
+                          opacity = (1.0 - v).clamp(0.0, 1.0);
+                        }
+
+                        if (opacity <= 0.0) return const SizedBox.shrink();
+
+                        final screenWidth = MediaQuery.of(context).size.width;
+                        const writeWidth = 56.0;
+                        const addMemberWidth = 160.0;
+                        
+                        final currentV = v.clamp(0.0, 1.0);
+                        final targetWidth = isCreator ? addMemberWidth : writeWidth;
+                        final currentWidth = writeWidth + (targetWidth - writeWidth) * currentV;
+                        final targetRight = (screenWidth - currentWidth) / 2;
+                        final endRight = isCreator ? targetRight : 16.0;
+                        final currentRight = 16.0 + (endRight - 16.0) * currentV;
+
+                        return Positioned(
+                          right: currentRight,
+                          bottom: 16.0,
+                          child: Opacity(
+                            opacity: opacity,
+                            child: Material(
+                              color: primaryText,
+                              borderRadius: BorderRadius.circular(28.0),
+                              elevation: 4,
+                              clipBehavior: Clip.antiAlias,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(28.0),
+                                onTap: () {
+                                  if (v < 0.5) {
+                                    context.push('/community/${widget.communityId}/post').then((_) {
+                                      ref.invalidate(communityPostsProvider(widget.communityId));
+                                      ref.invalidate(communityDetailProvider(widget.communityId));
+                                    });
+                                  } else if (isCreator) {
+                                    showModalBottomSheet(
+                                      context: context,
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      builder: (_) => _AddMemberSheet(communityId: widget.communityId),
+                                    );
+                                  }
+                                },
+                                child: Container(
+                                  width: currentWidth,
+                                  height: 56.0,
+                                  alignment: Alignment.center,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      Opacity(
+                                        opacity: (1.0 - currentV * 2).clamp(0.0, 1.0),
+                                        child: Icon(Icons.edit_outlined, color: isDark ? AppColors.black : AppColors.white),
+                                      ),
+                                      if (isCreator)
+                                        Opacity(
+                                          opacity: ((currentV - 0.5) * 2).clamp(0.0, 1.0),
+                                          child: SingleChildScrollView(
+                                            scrollDirection: Axis.horizontal,
+                                            physics: const NeverScrollableScrollPhysics(),
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.person_add_alt_1, color: isDark ? AppColors.black : AppColors.white),
+                                                const SizedBox(width: 8),
+                                                Text('Add Member', style: AppTypography.button(color: isDark ? AppColors.black : AppColors.white)),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
           ],
         ),
       ),
-      floatingActionButtonLocation: _tabController.index == 1 ? FloatingActionButtonLocation.centerFloat : FloatingActionButtonLocation.endFloat,
-      floatingActionButton: (communityAsync.value?.isMember == true && 
-                            (_tabController.index == 0 || 
-                            (_tabController.index == 1 && communityAsync.value?.creatorId == currentUserId)))
-          ? FloatingActionButton.extended(
-              isExtended: _tabController.index == 1,
-              onPressed: () async {
-                if (_tabController.index == 0) {
-                  await context.push('/community/${widget.communityId}/post');
-                  ref.invalidate(communityPostsProvider(widget.communityId));
-                  ref.invalidate(communityDetailProvider(widget.communityId));
-                } else {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (_) => _AddMemberSheet(communityId: widget.communityId),
-                  );
-                }
-              },
-              backgroundColor: primaryText,
-              icon: Icon(
-                _tabController.index == 1 ? Icons.person_add_alt_1 : Icons.edit_outlined,
-                color: isDark ? AppColors.black : AppColors.white,
-              ),
-              label: Text(
-                'Add Member',
-                style: AppTypography.button(color: isDark ? AppColors.black : AppColors.white),
-              ),
-            )
-          : null,
     );
   }
 }
@@ -549,7 +597,7 @@ class _AddMemberSheetState extends ConsumerState<_AddMemberSheet> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Add User', style: AppTypography.h2(color: primaryText)),
+              Text('Add Member', style: AppTypography.h2(color: primaryText)),
               IconButton(icon: Icon(Icons.close, color: primaryText), onPressed: () => Navigator.pop(context)),
             ],
           ),
@@ -854,48 +902,31 @@ class _MembersTabState extends ConsumerState<_MembersTab> {
     );
   }
 
-  void _showTransferAdminDialog(BuildContext context, String newAdminId, String displayName, String username) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
-    final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
-
-    showDialog(
+  void _showTransferAdminDialog(BuildContext context, String newAdminId, String displayName, String username) async {
+    final confirmed = await AppDialogs.showConfirmDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Theme.of(ctx).scaffoldBackgroundColor,
-        title: Text('Make Admin?', style: AppTypography.h3(color: primaryText)),
-        content: Text(
-          'Are you sure you want to transfer your admin rights to $displayName (@$username)? You will lose your admin status and become a regular member.',
-          style: AppTypography.body(color: secondaryText),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: AppTypography.bodySemiBold(color: secondaryText)),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              try {
-                final repo = ref.read(communityRepositoryProvider);
-                await repo.transferAdmin(
-                  communityId: widget.communityId,
-                  newAdminId: newAdminId,
-                );
-                ref.invalidate(communityDetailProvider(widget.communityId));
-                ref.invalidate(communityMembersProvider(widget.communityId));
-                ref.invalidate(communitiesProvider);
-              } catch (e) {
-                if (context.mounted) {
-                  AppErrorHandler.showErrorDialog(context, e);
-                }
-              }
-            },
-            child: Text('Transfer', style: AppTypography.bodySemiBold(color: primaryText)),
-          ),
-        ],
-      ),
+      title: 'Make Admin?',
+      message: 'Are you sure you want to transfer your admin rights to $displayName (@$username)? You will lose your admin status and become a regular member.',
+      confirmText: 'Transfer',
+      icon: Icons.admin_panel_settings_outlined,
     );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final repo = ref.read(communityRepositoryProvider);
+        await repo.transferAdmin(
+          communityId: widget.communityId,
+          newAdminId: newAdminId,
+        );
+        ref.invalidate(communityDetailProvider(widget.communityId));
+        ref.invalidate(communityMembersProvider(widget.communityId));
+        ref.invalidate(communitiesProvider);
+      } catch (e) {
+        if (context.mounted) {
+          AppErrorHandler.showErrorDialog(context, e);
+        }
+      }
+    }
   }
 }
 class _AboutTab extends StatelessWidget {
