@@ -8,6 +8,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/opinion_card.dart';
 import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/providers/supabase_provider.dart';
+import '../../../core/widgets/video_loader.dart';
 import '../../../data/models/opinion.dart';
 
 /// Search screen â€” unified search with smart prefixes
@@ -282,7 +283,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           // Results
           Expanded(
             child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: VideoLoader())
                 : _query.isEmpty
                     ? _buildEmptyState(secondaryText, primaryText)
                     : _buildResults(primaryText, secondaryText, borderColor, surfaceColor),
@@ -294,7 +295,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildEmptyState(Color secondaryText, Color primaryText) {
     if (_isLoadingHistory) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: VideoLoader());
     }
 
     if (_searchHistory.isNotEmpty) {

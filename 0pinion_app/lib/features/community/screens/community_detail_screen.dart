@@ -127,16 +127,8 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
           onPressed: () => context.pop(),
         ),
         title: communityAsync.when(
-          data: (c) => Row(
-            children: [
-              if (c.isPrivate) Icon(Icons.lock_outline, size: 20, color: secondaryText),
-              if (c.isPrivate) const SizedBox(width: 8),
-              Flexible(
-                child: Text(c.name, style: AppTypography.h2(color: primaryText), overflow: TextOverflow.ellipsis),
-              ),
-            ],
-          ),
-          loading: () => Text('Loading...', style: AppTypography.h2(color: primaryText)),
+          skipLoadingOnRefresh: true,
+          data: (c) => Text(c.name, style: AppTypography.h2(color: primaryText)),          loading: () => Text('Loading...', style: AppTypography.h2(color: primaryText)),
           error: (error, stackTrace) => Text('Community', style: AppTypography.h2(color: primaryText)),
         ),
         actions: communityAsync.maybeWhen(
@@ -156,8 +148,8 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
         ),
       ),
       body: communityAsync.when(
-        loading: () => const Center(child: LoadingGifWidget()),
-        error: (err, _) => Center(
+        skipLoadingOnRefresh: true,
+        loading: () => const Center(child: LoadingGifWidget()),        error: (err, _) => Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -367,8 +359,8 @@ class _PostsTab extends ConsumerWidget {
     final postsAsync = ref.watch(communityPostsProvider(communityId));
 
     return postsAsync.when(
-      loading: () => const Center(child: LoadingGifWidget()),
-      error: (err, _) => Center(
+      skipLoadingOnRefresh: true,
+      loading: () => const Center(child: LoadingGifWidget()),      error: (err, _) => Center(
         child: Text('Error loading posts', style: AppTypography.body(color: secondaryText)),
       ),
       data: (posts) {
@@ -730,8 +722,8 @@ class _MembersTabState extends ConsumerState<_MembersTab> {
     final membersAsync = ref.watch(communityMembersProvider(widget.communityId));
 
     return membersAsync.when(
-      loading: () => const Center(child: LoadingGifWidget()),
-      error: (err, _) => Center(
+      skipLoadingOnRefresh: true,
+      loading: () => const Center(child: LoadingGifWidget()),      error: (err, _) => Center(
         child: Text('Error loading members', style: AppTypography.body(color: secondaryText)),
       ),
       data: (members) {

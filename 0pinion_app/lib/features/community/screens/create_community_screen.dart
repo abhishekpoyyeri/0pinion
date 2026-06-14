@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/providers/community_provider.dart';
+import '../../../core/widgets/video_loader.dart';
 import '../../../data/repositories/community_repository.dart';
 import '../../../data/repositories/zero_repository.dart';
 
@@ -170,10 +171,7 @@ class _CreateCommunityScreenState extends ConsumerState<CreateCommunityScreen> {
                     ? SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: isDark ? AppColors.black : AppColors.white,
-                        ),
+                        child: const VideoLoader(width: 16, height: 16),
                       )
                     : Text(
                         'Create',

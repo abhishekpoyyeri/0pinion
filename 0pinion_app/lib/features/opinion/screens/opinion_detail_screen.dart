@@ -60,8 +60,8 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
         ],
       ),
       body: opinionsAsync.when(
-        loading: () => const Center(child: LoadingGifWidget()),
-        error: (e, st) => Center(child: Text('Error: $e')),
+        skipLoadingOnRefresh: true,
+        loading: () => const Center(child: LoadingGifWidget()),        error: (e, st) => Center(child: Text('Error: $e')),
         data: (opinions) {
           if (opinions.isEmpty) {
             return const Center(child: Text('Opinion not found'));

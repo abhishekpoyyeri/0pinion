@@ -64,7 +64,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       ),
       body: user == null
           ? Center(child: Text('Not logged in', style: AppTypography.body(color: primaryText)))
-          : Column(
+          : (profileAsync.isLoading && profile == null)
+              ? const Center(child: VideoLoader())
+              : Column(
               children: [
                 // Profile header
                 Padding(
@@ -77,18 +79,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        (profileAsync.isLoading && profile == null)
-                            ? 'Loading...'
-                            : profile?['display_name'] as String? ?? user.email ?? 'Unknown User',
+                        profile?['display_name'] as String? ?? user.email ?? 'Unknown User',
                         style: AppTypography.h3(color: primaryText),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        (profileAsync.isLoading && profile == null)
-                            ? '@...'
-                            : profile?['username'] != null 
-                                ? '@${profile!['username']}' 
-                                : '@user_${user.id.substring(0, 4)}',
+                        profile?['username'] != null 
+                            ? '@${profile!['username']}' 
+                            : '@user_${user.id.substring(0, 4)}',
                         style: AppTypography.body(color: secondaryText),
                       ),
                       const SizedBox(height: 20),
@@ -153,6 +151,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final opinionsAsync = ref.watch(feedOpinionsProvider);
     
     return opinionsAsync.when(
+      skipLoadingOnRefresh: true,
       data: (opinions) {
         final userOpinions = opinions.where((o) => o.authorId == userId).toList();
         if (userOpinions.isEmpty) {
@@ -248,6 +247,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return argumentsAsync.when(
+      skipLoadingOnRefresh: true,
       data: (arguments) {
         if (arguments.isEmpty) {
           return AnimatedRefreshWidget(
@@ -391,6 +391,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     final zeroesAsync = ref.watch(userZeroesProvider);
 
     return zeroesAsync.when(
+      skipLoadingOnRefresh: true,
       data: (zeroes) {
         if (zeroes.isEmpty) {
           return AnimatedRefreshWidget(

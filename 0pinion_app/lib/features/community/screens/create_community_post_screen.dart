@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/providers/community_provider.dart';
+import '../../../core/widgets/video_loader.dart';
 import '../../../data/repositories/community_repository.dart';
 
 /// Screen to create a new post inside a community
@@ -100,10 +101,7 @@ class _CreateCommunityPostScreenState
                     ? SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: isDark ? AppColors.black : AppColors.white,
-                        ),
+                        child: const VideoLoader(width: 16, height: 16),
                       )
                     : Text(
                         'Post',

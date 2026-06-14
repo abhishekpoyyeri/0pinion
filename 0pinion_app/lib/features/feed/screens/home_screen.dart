@@ -1,6 +1,5 @@
 import 'package:opinion_app/core/widgets/animated_refresh_widget.dart';
-import 'package:opinion_app/core/widgets/loading_gif_widget.dart';
-import 'package:flutter/material.dart';
+import 'package:opinion_app/core/widgets/loading_gif_widget.dart';import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -108,9 +107,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         body: TabBarView(
           controller: _tabController,
           children: [
-            _buildTab(opinionsAsync, (opinions) => opinions, 'for_you'),
-            _buildCookingTab(),
-            _buildLiveRoomsTab(),
+            KeepAliveWrapper(key: const ValueKey('for_you'), child: _buildTab(opinionsAsync, (opinions) => opinions, 'for_you')),
+            KeepAliveWrapper(key: const ValueKey('cooking'), child: _buildCookingTab()),
+            KeepAliveWrapper(key: const ValueKey('live_rooms'), child: _buildLiveRoomsTab()),
           ],
         ),
       ),
@@ -119,6 +118,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   Widget _buildTab(AsyncValue opinionsAsync, List Function(List) filter, String tabKey) {
     return opinionsAsync.when(
+      skipLoadingOnRefresh: true,
       data: (opinions) => _buildFeed(filter(opinions as List), tabKey),
       loading: () => const Center(child: LoadingGifWidget()),
       error: (err, stack) => AnimatedRefreshWidget(
@@ -253,7 +253,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       child: ListView.separated(
         key: PageStorageKey<String>('${tabKey}_data'),
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
         itemCount: opinions.length,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
@@ -277,9 +277,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final roomsAsync = ref.watch(liveRoomsProvider);
 
     return roomsAsync.when(
+      skipLoadingOnRefresh: true,
       loading: () => const Center(child: LoadingGifWidget()),
-      error: (err, _) => AnimatedRefreshWidget(
-        onRefresh: () async {
+      error: (err, _) => AnimatedRefreshWidget(        onRefresh: () async {
           ref.invalidate(liveRoomsProvider);
           await Future.delayed(const Duration(milliseconds: 500));
         },
@@ -338,7 +338,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           child: ListView.separated(
             key: const PageStorageKey<String>('live_rooms_data'),
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             itemCount: rooms.length,
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
@@ -402,7 +402,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               child: Text(
                                 isClosed ? 'CLOSED' : 'LIVE',
                                 style: AppTypography.label(
-                                  color: isClosed ? Colors.white : Colors.black,
+                                  color: isClosed ? AppColors.white : AppColors.black,
                                 ),
                               ),
                             ),
