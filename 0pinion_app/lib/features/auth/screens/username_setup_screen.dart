@@ -151,12 +151,11 @@ class _UsernameSetupScreenState extends ConsumerState<UsernameSetupScreen> {
               ),
               const SizedBox(height: 40),
 
-              _isLoading
-                  ? const Center(child: LoadingGifWidget())
-                  : PrimaryButton(
-                      label: 'Continue',
-                      onPressed: _saveProfile,
-                    ),
+              PrimaryButton(
+                label: 'Continue',
+                onPressed: _saveProfile,
+                isLoading: _isLoading,
+              ),
               const SizedBox(height: 32),
             ],
           ),

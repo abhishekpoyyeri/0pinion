@@ -17,6 +17,7 @@ class LoadingGifWidget extends StatelessWidget {
     Widget image = Image.asset(
       'assets/loading.gif',
       fit: BoxFit.contain,
+      gaplessPlayback: true,
     );
 
     if (isLightMode) {

@@ -191,12 +191,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               const SizedBox(height: 32),
 
               // Sign Up button
-              _isLoading
-                  ? const Center(child: LoadingGifWidget())
-                  : PrimaryButton(
-                      label: _isLogin ? 'Log In' : 'Sign Up',
-                      onPressed: _submit,
-                    ),
+              PrimaryButton(
+                label: _isLogin ? 'Log In' : 'Sign Up',
+                onPressed: _submit,
+                isLoading: _isLoading,
+              ),
               const SizedBox(height: 24),
 
               // Divider

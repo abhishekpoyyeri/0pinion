@@ -115,23 +115,27 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
                   const Spacer(flex: 4),
 
-                  // Get Started / Login buttons or Loader
-                  if (ref.watch(authStateProvider).isLoading || !ref.watch(authStateProvider).hasValue)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24.0),
-                      child: LoadingGifWidget(),
-                    )
-                  else ...[
-                    PrimaryButton(
-                      label: 'Get Started',
-                      onPressed: () => context.go('/signup'),
+                  SizedBox(
+                    height: 116,
+                    child: Center(
+                      child: (ref.watch(authStateProvider).isLoading || !ref.watch(authStateProvider).hasValue)
+                          ? const LoadingGifWidget(width: 52, height: 52)
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                PrimaryButton(
+                                  label: 'Get Started',
+                                  onPressed: () => context.go('/signup'),
+                                ),
+                                const SizedBox(height: 12),
+                                SecondaryButton(
+                                  label: 'Login',
+                                  onPressed: () => context.go('/login'),
+                                ),
+                              ],
+                            ),
                     ),
-                    const SizedBox(height: 12),
-                    SecondaryButton(
-                      label: 'Login',
-                      onPressed: () => context.go('/login'),
-                    ),
-                  ],
+                  ),
 
                   const SizedBox(height: 48),
                 ],
