@@ -135,10 +135,46 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
           _isAnonymous = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Opinion posted successfully!')),
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
+            final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
+            
+            return Dialog(
+              backgroundColor: isDark ? AppColors.black : AppColors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle, color: primaryText, size: 64),
+                    const SizedBox(height: 16),
+                    Text('Opinion Posted', style: AppTypography.h2(color: primaryText)),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Your voice has been added to the debate.',
+                      style: AppTypography.body(color: secondaryText),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
-        context.go('/home');
+
+        await Future.delayed(const Duration(milliseconds: 1500));
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
+          context.go('/home');
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -203,10 +239,46 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
           _customDurationController.clear();
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Live room created successfully!')),
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            final primaryText = isDark ? AppColors.darkPrimaryText : AppColors.lightPrimaryText;
+            final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
+            
+            return Dialog(
+              backgroundColor: isDark ? AppColors.black : AppColors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+                side: BorderSide(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.podcasts, color: primaryText, size: 64),
+                    const SizedBox(height: 16),
+                    Text('Room Created', style: AppTypography.h2(color: primaryText)),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Your live room is ready to host the debate.',
+                      style: AppTypography.body(color: secondaryText),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         );
-        context.go('/live/$roomId');
+
+        await Future.delayed(const Duration(milliseconds: 1500));
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop(); // dismiss dialog
+          context.go('/live/$roomId');
+        }
       }
     } catch (e) {
       if (mounted) {

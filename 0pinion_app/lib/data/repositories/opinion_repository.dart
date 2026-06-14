@@ -23,7 +23,7 @@ class OpinionRepository {
           // Since it's a feed, let's just do a Future-based select with relations
           // and emit it when data changes.
           final res = await _supabase.from('opinions').select(
-              '*, profiles!opinions_author_id_fkey(username), zeroes(name), arguments(id, type)'
+              '*, profiles(username), zeroes(name), arguments(id, type)'
           ).order('created_at', ascending: false);
           return res.map((json) => Opinion.fromJson(json)).toList();
         });
