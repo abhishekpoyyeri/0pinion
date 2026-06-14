@@ -118,7 +118,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                   SizedBox(
                     height: 116,
                     child: Center(
-                      child: (ref.watch(authStateProvider).isLoading || !ref.watch(authStateProvider).hasValue)
+                      child: (ref.watch(authStateProvider).isLoading || !ref.watch(authStateProvider).hasValue || ref.watch(currentUserProvider) != null)
                           ? const LoadingGifWidget(width: 52, height: 52)
                           : Column(
                               mainAxisAlignment: MainAxisAlignment.center,

@@ -128,6 +128,16 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
       );
 
       if (mounted) {
+        _opinionTitleController.clear();
+        _opinionContentController.clear();
+        setState(() {
+          _detectedZeroes.clear();
+          _isAnonymous = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Opinion posted successfully!')),
+        );
         context.go('/home');
       }
     } catch (e) {
@@ -185,6 +195,17 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
       );
 
       if (mounted) {
+        _roomTitleController.clear();
+        _roomTopicController.clear();
+        setState(() {
+          _selectedDuration = 10;
+          _isCustomDuration = false;
+          _customDurationController.clear();
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Live room created successfully!')),
+        );
         context.go('/live/$roomId');
       }
     } catch (e) {
@@ -382,12 +403,11 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
             const SizedBox(height: 40),
 
             // Submit
-            _isOpinionLoading
-                ? const Center(child: LoadingGifWidget())
-                : PrimaryButton(
-                    label: 'Post Opinion',
-                    onPressed: _submitOpinion,
-                  ),
+            PrimaryButton(
+              label: 'Post Opinion',
+              onPressed: _submitOpinion,
+              isLoading: _isOpinionLoading,
+            ),
             const SizedBox(height: 32),
           ],
         ),
@@ -539,12 +559,11 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
             const SizedBox(height: 40),
 
             // Submit
-            _isRoomLoading
-                ? const Center(child: LoadingGifWidget())
-                : PrimaryButton(
-                    label: 'Create Live Room',
-                    onPressed: _submitLiveRoom,
-                  ),
+            PrimaryButton(
+              label: 'Create Live Room',
+              onPressed: _submitLiveRoom,
+              isLoading: _isRoomLoading,
+            ),
             const SizedBox(height: 32),
           ],
         ),
