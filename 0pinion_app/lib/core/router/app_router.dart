@@ -47,7 +47,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // â”€â”€â”€ Auth & Onboarding â”€â”€â”€
+      // ─── Auth & Onboarding ───
+      GoRoute(
+        path: '/',
+        redirect: (_, __) => '/splash',
+      ),
       GoRoute(
         path: '/splash',
         builder: (context, state) => const SplashScreen(),
