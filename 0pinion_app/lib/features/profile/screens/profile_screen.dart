@@ -66,83 +66,87 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           ? Center(child: Text('Not logged in', style: AppTypography.body(color: primaryText)))
           : (profileAsync.isLoading && profile == null)
               ? const Center(child: LoadingGifWidget())
-              : Column(
-              children: [
-                // Profile header
-                Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      AvatarWidget(
-                        seed: profile?['avatar_seed'] as int? ?? user.id.hashCode,
-                        size: 80,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        profile?['display_name'] as String? ?? user.email ?? 'Unknown User',
-                        style: AppTypography.h3(color: primaryText),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        profile?['username'] != null 
-                            ? '@${profile!['username']}' 
-                            : '@user_${user.id.substring(0, 4)}',
-                        style: AppTypography.body(color: secondaryText),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Reputation
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: borderColor),
-                        ),
-                        child: Text(
-                          'Reputation: ${stats['reputation'] ?? 0}',
-                          style: AppTypography.bodySemiBold(color: primaryText),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Stats row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              : NestedScrollView(
+              headerSliverBuilder: (context, innerBoxIsScrolled) {
+                return [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
                         children: [
-                          _StatItem(value: '${stats['opinions'] ?? 0}', label: 'Opinions'),
-                          Container(width: 1, height: 32, color: borderColor),
-                          _StatItem(value: '${stats['arguments'] ?? 0}', label: 'Debates'),
-                          Container(width: 1, height: 32, color: borderColor),
-                          _StatItem(value: '${stats['zeroes'] ?? 0}', label: 'Zeroes'),
+                          AvatarWidget(
+                            seed: profile?['avatar_seed'] as int? ?? user.id.hashCode,
+                            size: 80,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            profile?['display_name'] as String? ?? user.email ?? 'Unknown User',
+                            style: AppTypography.h3(color: primaryText),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            profile?['username'] != null 
+                                ? '@${profile!['username']}' 
+                                : '@user_${user.id.substring(0, 4)}',
+                            style: AppTypography.body(color: secondaryText),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Reputation
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: borderColor),
+                            ),
+                            child: Text(
+                              'Reputation: ${stats['reputation'] ?? 0}',
+                              style: AppTypography.bodySemiBold(color: primaryText),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Stats row
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _StatItem(value: '${stats['opinions'] ?? 0}', label: 'Opinions'),
+                              Container(width: 1, height: 32, color: borderColor),
+                              _StatItem(value: '${stats['arguments'] ?? 0}', label: 'Debates'),
+                              Container(width: 1, height: 32, color: borderColor),
+                              _StatItem(value: '${stats['zeroes'] ?? 0}', label: 'Zeroes'),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-
-                // Tabs
-                TabBar(
-                  controller: _tabController,
-                  tabs: const [
-                    Tab(text: 'Opinions'),
-                    Tab(text: 'Arguments'),
-                    Tab(text: 'Zeroes'),
-                  ],
-                ),
-                Divider(height: 1, color: borderColor),
-
-                // Tab content
-                Expanded(
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [
-                      _buildOpinionsTab(primaryText, secondaryText, borderColor, user.id),
-                      _buildArgumentsTab(primaryText, secondaryText, borderColor),
-                      _buildZeroesTab(primaryText, secondaryText, borderColor),
-                    ],
+                  SliverAppBar(
+                    pinned: true,
+                    primary: false,
+                    automaticallyImplyLeading: false,
+                    toolbarHeight: 0,
+                    backgroundColor: isDark ? AppColors.black : AppColors.white,
+                    bottom: TabBar(
+                      controller: _tabController,
+                      dividerColor: borderColor,
+                      tabs: const [
+                        Tab(text: 'Opinions'),
+                        Tab(text: 'Arguments'),
+                        Tab(text: 'Zeroes'),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ];
+              },
+              body: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildOpinionsTab(primaryText, secondaryText, borderColor, user.id),
+                  _buildArgumentsTab(primaryText, secondaryText, borderColor),
+                  _buildZeroesTab(primaryText, secondaryText, borderColor),
+                ],
+              ),
             ),
     );
   }
@@ -182,7 +186,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           },
           child: ListView.separated(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             itemCount: userOpinions.length,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
@@ -281,7 +285,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           },
           child: ListView.separated(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             itemCount: arguments.length,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
@@ -425,7 +429,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           },
           child: ListView.separated(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             itemCount: zeroes.length,
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
