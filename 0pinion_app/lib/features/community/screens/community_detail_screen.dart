@@ -212,13 +212,16 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
                         spacing: 8,
                         runSpacing: 4,
                         children: community.zeroes.map((zero) {
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: borderColor),
+                          return GestureDetector(
+                            onTap: () => context.push('/tag/$zero'),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: borderColor),
+                              ),
+                              child: Text(zero, style: AppTypography.label(color: secondaryText)),
                             ),
-                            child: Text(zero, style: AppTypography.label(color: secondaryText)),
                           );
                         }).toList(),
                       ),

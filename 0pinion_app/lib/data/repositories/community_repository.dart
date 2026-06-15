@@ -183,13 +183,13 @@ class CommunityRepository {
     final userId = _supabase.auth.currentUser?.id;
 
     // Get community IDs linked to this zero
-    final links = await _supabase
-        .from('community_zeroes')
-        .select('community_id')
-        .eq('zero_id', zeroId);
+    final parentRes = await _supabase
+        .from('communities')
+        .select('id, community_zeroes!inner(zero_id)')
+        .eq('community_zeroes.zero_id', zeroId);
 
-    final communityIds = (links as List)
-        .map((l) => l['community_id'] as String)
+    final communityIds = (parentRes as List)
+        .map((l) => l['id'] as String)
         .toList();
 
     if (communityIds.isEmpty) return [];
