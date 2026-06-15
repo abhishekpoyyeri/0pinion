@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/providers/supabase_provider.dart';
@@ -22,6 +23,13 @@ class AuthRepository {
     return await _supabase.auth.signInWithPassword(
       email: email,
       password: password,
+    );
+  }
+
+  Future<bool> signInWithGoogle() async {
+    return await _supabase.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: kIsWeb ? null : 'app.opinion://login-callback',
     );
   }
 
