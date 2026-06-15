@@ -13,6 +13,7 @@ import '../../features/opinion/screens/write_argument_screen.dart';
 import '../../features/search/screens/browse_zeroes_screen.dart';
 import '../../features/live/screens/live_room_chat_screen.dart';
 import '../../features/report/screens/report_screen.dart';
+import '../../features/tag/screens/tag_screen.dart';
 import '../widgets/main_screen.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -96,6 +97,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: rootNavigatorKey,
         path: '/zeroes',
         builder: (context, state) => const BrowseZeroesScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: '/tag/:name',
+        builder: (context, state) => TagScreen(
+          tagName: state.pathParameters['name']!,
+        ),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

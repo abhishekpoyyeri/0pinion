@@ -473,14 +473,20 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: surfaceColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor),
-        ),
-        child: Row(
+      child: GestureDetector(
+        onTap: () {
+          if (name.isNotEmpty) {
+            context.push('/tag/$name');
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: surfaceColor,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: borderColor),
+          ),
+          child: Row(
           children: [
             Container(
               width: 40,
@@ -516,6 +522,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               style: AppTypography.caption(color: secondaryText),
             ),
           ],
+        ),
         ),
       ),
     );

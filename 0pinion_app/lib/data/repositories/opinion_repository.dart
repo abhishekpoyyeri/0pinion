@@ -29,6 +29,15 @@ class OpinionRepository {
         });
   }
 
+  Future<List<Opinion>> fetchOpinionsByZero(String zeroId) async {
+    final res = await _supabase
+        .from('opinions')
+        .select('*, profiles(username), zeroes(name), arguments(id, type)')
+        .eq('zero_id', zeroId)
+        .order('created_at', ascending: false);
+    return res.map((json) => Opinion.fromJson(json)).toList();
+  }
+
   Future<void> createOpinion({
     required String title,
     required String content,

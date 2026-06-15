@@ -19,3 +19,8 @@ final cookingOpinionsProvider = Provider<AsyncValue<List<Opinion>>>((ref) {
     return cooking.take(20).toList();
   });
 });
+
+final opinionsByZeroProvider = FutureProvider.family<List<Opinion>, String>((ref, zeroId) async {
+  final repository = ref.watch(opinionRepositoryProvider);
+  return repository.fetchOpinionsByZero(zeroId);
+});

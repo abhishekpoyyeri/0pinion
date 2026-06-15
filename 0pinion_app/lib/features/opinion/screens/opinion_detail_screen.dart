@@ -147,13 +147,16 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
                   Wrap(
                     spacing: 8,
                     children: opinion.zeroes.map((z) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: borderColor),
+                      return GestureDetector(
+                        onTap: () => context.push('/tag/$z'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: borderColor),
+                          ),
+                          child: Text(z, style: AppTypography.label(color: secondaryText)),
                         ),
-                        child: Text(z, style: AppTypography.label(color: secondaryText)),
                       );
                     }).toList(),
                   ),
