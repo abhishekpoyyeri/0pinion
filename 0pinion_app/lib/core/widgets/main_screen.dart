@@ -38,8 +38,8 @@ class _MainScreenState extends State<MainScreen> {
     
     _pageController.animateToPage(
       index,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
+      duration: const Duration(milliseconds: 1),
+      curve: Curves.linear,
     );
   }
 
