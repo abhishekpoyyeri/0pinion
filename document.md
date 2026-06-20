@@ -19,7 +19,7 @@ Debate, Not Doomscroll.
 # Mission
 
 Create the internet's best place for structured opinions and meaningful debate.
-
+in the most minimal way
 ---
 
 # Problem
