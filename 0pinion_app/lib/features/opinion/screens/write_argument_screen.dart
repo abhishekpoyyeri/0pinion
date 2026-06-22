@@ -143,6 +143,22 @@ class _WriteArgumentScreenState extends ConsumerState<WriteArgumentScreen> {
                       ],
                     ),
                   ),
+                  if (_isAnonymous) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(Icons.warning_amber_rounded, size: 16, color: primaryText),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Warning: Truly anonymous posts cannot be edited or deleted once posted.',
+                            style: AppTypography.captionMedium(color: primaryText),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

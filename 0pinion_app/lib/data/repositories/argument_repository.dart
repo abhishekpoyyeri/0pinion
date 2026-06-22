@@ -36,7 +36,7 @@ class ArgumentRepository {
   }) async {
     await _supabase.from('arguments').insert({
       'opinion_id': opinionId,
-      'author_id': authorId,
+      'author_id': isAnonymous ? null : authorId,
       'type': type,
       'content': content,
       'is_anonymous': isAnonymous,

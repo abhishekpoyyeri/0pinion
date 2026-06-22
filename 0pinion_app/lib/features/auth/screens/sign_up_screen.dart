@@ -108,6 +108,25 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     }
   }
 
+  Future<void> _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      final authRepo = ref.read(authRepositoryProvider);
+      final result = await authRepo.signInWithGoogle();
+      if (!result && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to open Google Sign-In.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        AppErrorHandler.showErrorDialog(context, e);
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -216,11 +235,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 width: double.infinity,
                 height: 52,
                 child: OutlinedButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Google Sign-In not implemented yet.')),
-                    );
-                  },
+                  onPressed: _isLoading ? null : _signInWithGoogle,
                   icon: const Text('G', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                   label: Text('Continue with Google', style: AppTypography.button()),
                 ),

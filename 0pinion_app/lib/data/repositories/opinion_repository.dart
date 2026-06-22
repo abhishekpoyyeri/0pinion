@@ -48,9 +48,9 @@ class OpinionRepository {
     await _supabase.from('opinions').insert({
       'title': title,
       'content': content,
-      'author_id': authorId,
+      'author_id': isAnonymous ? null : authorId,
       'is_anonymous': isAnonymous,
-      'zero_id': ?zeroId,
+      'zero_id': zeroId,
     });
   }
 }
