@@ -275,12 +275,6 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
         appBar: AppBar(
           title: Text('Create', style: AppTypography.h3(color: primaryText)),
           centerTitle: true,
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => context.go('/home'),
-            ),
-          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Opinion'),
