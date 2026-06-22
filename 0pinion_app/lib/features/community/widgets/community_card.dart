@@ -4,7 +4,6 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../core/widgets/avatar_widget.dart';
 import '../../../data/models/community.dart';
-
 /// Card widget for displaying a community in list views
 class CommunityCard extends StatelessWidget {
   final Community community;

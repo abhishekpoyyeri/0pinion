@@ -13,6 +13,7 @@ import '../../../core/providers/argument_provider.dart';
 import '../../../core/providers/supabase_provider.dart';
 import '../../../data/repositories/opinion_repository.dart';
 import '../../../data/repositories/argument_repository.dart';
+import 'package:share_plus/share_plus.dart';
 
 /// Opinion Detail screen â€” full opinion + debate zone
 class OpinionDetailScreen extends ConsumerStatefulWidget {
@@ -57,6 +58,10 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
           onPressed: () => context.pop(),
         ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.share_outlined, color: secondaryText),
+            onPressed: () => SharePlus.instance.share(ShareParams(text: 'Check out this opinion: https://0pinion.app/opinion/${widget.opinionId}')),
+          ),
           IconButton(
             icon: Icon(Icons.flag_outlined, color: secondaryText),
             onPressed: () => context.push('/report/opinion/${widget.opinionId}'),

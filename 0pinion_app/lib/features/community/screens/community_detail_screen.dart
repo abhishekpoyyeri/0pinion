@@ -14,6 +14,7 @@ import '../../../data/repositories/community_repository.dart';
 import '../../../data/repositories/community_invite_repository.dart';
 import '../../../data/models/community_post.dart';
 import 'dart:async';
+import 'package:share_plus/share_plus.dart';
 
 /// Community detail page with Posts, Members, and About tabs
 class CommunityDetailScreen extends ConsumerStatefulWidget {
@@ -139,6 +140,11 @@ class _CommunityDetailScreenState extends ConsumerState<CommunityDetailScreen>
           data: (community) {
             final isCreator = community.creatorId == currentUserId;
             return [
+              IconButton(
+                icon: Icon(Icons.share_outlined, color: primaryText),
+                onPressed: () => SharePlus.instance.share(ShareParams(text: 'Check out this community: https://0pinion.app/community/${community.id}')),
+                tooltip: 'Share Community',
+              ),
               // Remove the Search icon since it's now in Members Tab
               if (isCreator)
                 IconButton(

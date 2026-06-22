@@ -9,6 +9,7 @@ import '../../../core/widgets/avatar_widget.dart';
 import '../../../core/providers/supabase_provider.dart';
 import '../../../core/widgets/loading_gif_widget.dart';
 import '../../../data/repositories/live_room_repository.dart';
+import 'package:share_plus/share_plus.dart';
 
 /// Live Room Chat screen â€” ephemeral real-time debate via Supabase Broadcast
 /// Features: Presence counting, countdown timer, topic header, admin close, conclusion
@@ -482,6 +483,11 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: Icon(Icons.share_outlined, color: primaryText),
+            tooltip: 'Share Room',
+            onPressed: () => SharePlus.instance.share(ShareParams(text: 'Join this live room: https://0pinion.app/live/${widget.roomId}')),
+          ),
           if (_isHost && _roomStatus == 'active')
             IconButton(
               icon: const Icon(Icons.cancel_outlined, color: Colors.white),

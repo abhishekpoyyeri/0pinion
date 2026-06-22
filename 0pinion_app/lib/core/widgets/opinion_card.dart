@@ -4,7 +4,6 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/widgets/avatar_widget.dart';
 import '../../data/models/opinion.dart';
-
 /// Opinion card for feed display
 /// Shows title, preview, author, zeroes, debate counts
 class OpinionCard extends StatelessWidget {
@@ -125,16 +124,23 @@ class OpinionCard extends StatelessWidget {
               ),
             if (opinion.zeroes.isNotEmpty) const SizedBox(height: 12),
 
-            // Debate stats
+            // Debate stats & actions
             Divider(color: borderColor),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 16,
-              runSpacing: 4,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _StatChip(label: 'Support', count: opinion.supportCount, color: primaryText),
-                _StatChip(label: 'Oppose', count: opinion.opposeCount, color: primaryText),
-                _StatChip(label: 'Question', count: opinion.questionCount, color: primaryText),
+                Expanded(
+                  child: Wrap(
+                    spacing: 16,
+                    runSpacing: 4,
+                    children: [
+                      _StatChip(label: 'Support', count: opinion.supportCount, color: primaryText),
+                      _StatChip(label: 'Oppose', count: opinion.opposeCount, color: primaryText),
+                      _StatChip(label: 'Question', count: opinion.questionCount, color: primaryText),
+                    ],
+                  ),
+                ),
               ],
             ),
           ],
