@@ -39,6 +39,26 @@ class _WriteArgumentScreenState extends ConsumerState<WriteArgumentScreen> {
     final secondaryText = isDark ? AppColors.darkSecondaryText : AppColors.lightSecondaryText;
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
+    final user = ref.watch(currentUserProvider);
+    final currentUserId = user?.id;
+
+    final argumentsAsync = ref.watch(opinionArgumentsProvider(widget.opinionId));
+    final existingArguments = argumentsAsync.valueOrNull ?? [];
+    
+    final hasSupported = existingArguments.any((arg) => arg.authorId == currentUserId && arg.type == ArgumentType.support);
+    final hasOpposed = existingArguments.any((arg) => arg.authorId == currentUserId && arg.type == ArgumentType.oppose);
+
+    List<ArgumentType> availableTypes = ArgumentType.values.toList();
+    if (hasSupported) {
+      availableTypes.remove(ArgumentType.oppose);
+    } else if (hasOpposed) {
+      availableTypes.remove(ArgumentType.support);
+    }
+
+    if (!availableTypes.contains(_selectedType)) {
+      _selectedType = availableTypes.first;
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -59,7 +79,7 @@ class _WriteArgumentScreenState extends ConsumerState<WriteArgumentScreen> {
                   Text('Your position', style: AppTypography.captionMedium(color: primaryText)),
                   const SizedBox(height: 12),
                   Row(
-                    children: ArgumentType.values.map((type) {
+                    children: availableTypes.map((type) {
                       final isSelected = _selectedType == type;
                       final label = type.name[0].toUpperCase() + type.name.substring(1);
                       return Expanded(
