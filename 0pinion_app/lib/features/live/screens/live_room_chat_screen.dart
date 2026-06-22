@@ -48,7 +48,7 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
   String _roomTopic = '';
   String? _hostId;
   String? _hostUsername;
-  int _durationMinutes = 10;
+  int _durationSeconds = 600;
   DateTime? _createdAt;
   String _roomStatus = 'active';
   String? _conclusion;
@@ -75,7 +75,7 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
         _roomTitle = room['title'] as String? ?? 'Room';
         _roomTopic = room['topic'] as String? ?? '';
         _hostId = room['host_id'] as String?;
-        _durationMinutes = room['duration_minutes'] as int? ?? 10;
+        _durationSeconds = room['duration_seconds'] as int? ?? 600;
         _createdAt = DateTime.tryParse(room['created_at'] as String? ?? '');
         _roomStatus = room['status'] as String? ?? 'active';
         _conclusion = room['conclusion'] as String?;
@@ -127,7 +127,7 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
-      final endTime = _createdAt!.add(Duration(minutes: _durationMinutes));
+      final endTime = _createdAt!.add(Duration(seconds: _durationSeconds));
       final remaining = endTime.difference(DateTime.now());
 
       if (remaining.isNegative) {
@@ -407,8 +407,12 @@ class _LiveRoomChatScreenState extends ConsumerState<LiveRoomChatScreen> {
   }
 
   String _formatDuration(Duration d) {
-    final mins = d.inMinutes;
+    final hours = d.inHours;
+    final mins = d.inMinutes % 60;
     final secs = d.inSeconds % 60;
+    if (hours > 0) {
+      return '${hours.toString().padLeft(2, '0')}:${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
+    }
     return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
   }
 

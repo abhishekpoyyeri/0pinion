@@ -376,10 +376,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               String timeInfo = '';
               if (!isClosed) {
                 final createdAtStr = room['created_at'] as String?;
-                final durationMins = room['duration_minutes'] as int? ?? 10;
+                final durationSecs = room['duration_seconds'] as int? ?? 600;
                 if (createdAtStr != null) {
                   final createdAt = DateTime.tryParse(createdAtStr) ?? DateTime.now();
-                  final expiresAt = createdAt.add(Duration(minutes: durationMins));
+                  final expiresAt = createdAt.add(Duration(seconds: durationSecs));
                   final remaining = expiresAt.difference(DateTime.now());
                   if (remaining.isNegative) {
                     timeInfo = '0m left';

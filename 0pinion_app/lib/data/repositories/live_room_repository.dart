@@ -35,8 +35,8 @@ class LiveRoomRepository {
       for (final room in rooms) {
         if (room['status'] == 'active') {
           final createdAt = DateTime.parse(room['created_at'] as String);
-          final duration = room['duration_minutes'] as int? ?? 10;
-          final endTime = createdAt.add(Duration(minutes: duration));
+          final duration = room['duration_seconds'] as int? ?? 600; // 10 mins default
+          final endTime = createdAt.add(Duration(seconds: duration));
           if (DateTime.now().isAfter(endTime)) {
             // Auto-close this room
             try {
@@ -99,13 +99,13 @@ class LiveRoomRepository {
     required String title,
     required String topic,
     required String hostId,
-    int durationMinutes = 10,
+    int durationSeconds = 600,
   }) async {
     final response = await _supabase.from('live_rooms').insert({
       'title': title,
       'topic': topic,
       'host_id': hostId,
-      'duration_minutes': durationMinutes,
+      'duration_seconds': durationSeconds,
     }).select('id').single();
     
     return response['id'] as String;

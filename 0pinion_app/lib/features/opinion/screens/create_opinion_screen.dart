@@ -36,7 +36,9 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
   bool _isRoomLoading = false;
   int _selectedDuration = 10; // minutes
   bool _isCustomDuration = false;
-  final _customDurationController = TextEditingController();
+  final _customHoursController = TextEditingController();
+  final _customMinutesController = TextEditingController();
+  final _customSecondsController = TextEditingController();
 
   static const _durationOptions = [5, 10, 15, 30, 60];
 
@@ -57,7 +59,9 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
     _opinionContentController.dispose();
     _roomTitleController.dispose();
     _roomTopicController.dispose();
-    _customDurationController.dispose();
+    _customHoursController.dispose();
+    _customMinutesController.dispose();
+    _customSecondsController.dispose();
     super.dispose();
   }
 
@@ -181,11 +185,14 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
         return;
       }
 
-      int finalDuration = _selectedDuration;
+      int finalDurationSeconds = _selectedDuration * 60;
       if (_isCustomDuration) {
-        final parsed = int.tryParse(_customDurationController.text.trim());
-        if (parsed != null && parsed > 0) {
-          finalDuration = parsed;
+        final h = int.tryParse(_customHoursController.text.trim()) ?? 0;
+        final m = int.tryParse(_customMinutesController.text.trim()) ?? 0;
+        final s = int.tryParse(_customSecondsController.text.trim()) ?? 0;
+        final totalSecs = (h * 3600) + (m * 60) + s;
+        if (totalSecs > 0) {
+          finalDurationSeconds = totalSecs;
         }
       }
 
@@ -193,7 +200,7 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
         title: title,
         topic: topic,
         hostId: user.id,
-        durationMinutes: finalDuration,
+        durationSeconds: finalDurationSeconds,
       );
 
       if (mounted) {
@@ -202,7 +209,9 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
         setState(() {
           _selectedDuration = 10;
           _isCustomDuration = false;
-          _customDurationController.clear();
+          _customHoursController.clear();
+          _customMinutesController.clear();
+          _customSecondsController.clear();
         });
 
         showDialog(
@@ -587,27 +596,63 @@ class _CreateOpinionScreenState extends ConsumerState<CreateOpinionScreen> {
             ),
             if (_isCustomDuration) ...[
               const SizedBox(height: 16),
-              TextField(
-                controller: _customDurationController,
-                keyboardType: TextInputType.number,
-                style: AppTypography.body(color: primaryText),
-                decoration: InputDecoration(
-                  hintText: 'Enter minutes (e.g. 45)',
-                  hintStyle: AppTypography.body(color: secondaryText),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: borderColor),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _customHoursController,
+                      keyboardType: TextInputType.number,
+                      style: AppTypography.body(color: primaryText),
+                      textAlign: TextAlign.center,
+                      decoration: InputDecoration(
+                        hintText: 'HH',
+                        hintStyle: AppTypography.body(color: secondaryText),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: borderColor)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: borderColor)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primaryText, width: 1.5)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
                   ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: borderColor),
+                  const SizedBox(width: 8),
+                  Text(':', style: AppTypography.h3(color: primaryText)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _customMinutesController,
+                      keyboardType: TextInputType.number,
+                      style: AppTypography.body(color: primaryText),
+                      textAlign: TextAlign.center,
+                      decoration: InputDecoration(
+                        hintText: 'MM',
+                        hintStyle: AppTypography.body(color: secondaryText),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: borderColor)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: borderColor)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primaryText, width: 1.5)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
                   ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: primaryText, width: 1.5),
+                  const SizedBox(width: 8),
+                  Text(':', style: AppTypography.h3(color: primaryText)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: TextField(
+                      controller: _customSecondsController,
+                      keyboardType: TextInputType.number,
+                      style: AppTypography.body(color: primaryText),
+                      textAlign: TextAlign.center,
+                      decoration: InputDecoration(
+                        hintText: 'SS',
+                        hintStyle: AppTypography.body(color: secondaryText),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: borderColor)),
+                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: borderColor)),
+                        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: primaryText, width: 1.5)),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      ),
+                    ),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
+                ],
               ),
             ],
             const SizedBox(height: 40),
