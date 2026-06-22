@@ -10,6 +10,9 @@ import '../../../core/widgets/primary_button.dart';
 import '../../../data/models/argument.dart';
 import '../../../core/providers/opinion_provider.dart';
 import '../../../core/providers/argument_provider.dart';
+import '../../../core/providers/supabase_provider.dart';
+import '../../../data/repositories/opinion_repository.dart';
+import '../../../data/repositories/argument_repository.dart';
 
 /// Opinion Detail screen â€” full opinion + debate zone
 class OpinionDetailScreen extends ConsumerStatefulWidget {
@@ -45,6 +48,7 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
 
     final opinionsAsync = ref.watch(feedOpinionsProvider);
+    final currentUserId = ref.watch(currentUserProvider)?.id;
 
     return Scaffold(
       appBar: AppBar(
@@ -139,6 +143,38 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
                           ],
                         ),
                       ),
+                      if (opinion.authorId != null && opinion.authorId == currentUserId)
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                          onPressed: () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: const Text('Delete Opinion'),
+                                content: const Text('Are you sure you want to delete this opinion?'),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(ctx, true),
+                                    child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true) {
+                              try {
+                                await ref.read(opinionRepositoryProvider).deleteOpinion(widget.opinionId);
+                                if (context.mounted) {
+                                  context.pop(); // Go back after delete
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                                }
+                              }
+                            }
+                          },
+                        ),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -211,7 +247,36 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
 
                       return Column(
                         children: filtered.map((arg) {
-                          return _ArgumentTile(argument: arg);
+                          return _ArgumentTile(
+                            argument: arg,
+                            currentUserId: currentUserId,
+                            onDelete: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: const Text('Delete Argument'),
+                                  content: const Text('Are you sure you want to delete this argument?'),
+                                  actions: [
+                                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: const Text('Delete', style: TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                try {
+                                  await ref.read(argumentRepositoryProvider).deleteArgument(arg.id);
+                                  ref.invalidate(opinionArgumentsProvider(widget.opinionId));
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                                  }
+                                }
+                              }
+                            },
+                          );
                         }).toList(),
                       );
                     },
@@ -250,8 +315,14 @@ class _OpinionDetailScreenState extends ConsumerState<OpinionDetailScreen>
 
 class _ArgumentTile extends StatelessWidget {
   final Argument argument;
+  final String? currentUserId;
+  final VoidCallback onDelete;
 
-  const _ArgumentTile({required this.argument});
+  const _ArgumentTile({
+    required this.argument,
+    required this.currentUserId,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -311,6 +382,13 @@ class _ArgumentTile extends StatelessWidget {
                 onTap: () => context.push('/report/argument/${argument.id}'),
                 child: Text('Report', style: AppTypography.caption(color: secondaryText)),
               ),
+              if (argument.authorId != null && argument.authorId == currentUserId) ...[
+                const Spacer(),
+                GestureDetector(
+                  onTap: onDelete,
+                  child: Text('Delete', style: AppTypography.captionMedium(color: Colors.red)),
+                ),
+              ],
             ],
           ),
         ],

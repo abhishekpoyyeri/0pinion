@@ -53,4 +53,8 @@ class OpinionRepository {
       'zero_id': zeroId,
     });
   }
+
+  Future<void> deleteOpinion(String opinionId) async {
+    await _supabase.from('opinions').delete().eq('id', opinionId);
+  }
 }
