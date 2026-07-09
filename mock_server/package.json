@@ -1,0 +1,12 @@
+{
+  "name": "0pinion-mock-server",
+  "version": "1.0.0",
+  "description": "Mock REST API for 0pinion using json-server",
+  "main": "index.js",
+  "scripts": {
+    "start": "json-server --watch db.json --port 3000"
+  },
+  "dependencies": {
+    "json-server": "^0.17.4"
+  }
+}
