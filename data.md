@@ -70,4 +70,4 @@ Based on the `lib/features` architecture, the Flutter application is composed of
 - **Local Storage:** Hive, Flutter Secure Storage
 - **Push Notifications:** Firebase Cloud Messaging (FCM)
 - **Monitoring & Analytics:** Sentry (Errors), PostHog (Analytics)
-- **Third-Party Services:** OpenAI (Moderation & Summaries)
+  
